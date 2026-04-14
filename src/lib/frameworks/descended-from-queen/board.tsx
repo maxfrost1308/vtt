@@ -350,7 +350,20 @@ export function DftQBoard({
         />
       </div>
 
-      <div className="shrink-0 flex items-center gap-0 px-4 py-3 border-t border-zinc-800/60 bg-zinc-900/80 backdrop-blur">
+      <div className="shrink-0 border-t border-zinc-800/60 bg-zinc-900/80 backdrop-blur">
+        {s.dftqPhase === 'playing' && (() => {
+          const progress = Math.min(s.currentIndex / Math.max(s.deck.length - 1, 1), 1);
+          const isNearEnd = progress > 0.75;
+          return (
+            <div className="w-full h-0.5 bg-zinc-700 overflow-hidden">
+              <div
+                className={clsx('h-full transition-all duration-500', isNearEnd ? 'bg-amber-700' : 'bg-zinc-500')}
+                style={{ width: `${progress * 100}%` }}
+              />
+            </div>
+          );
+        })()}
+        <div className="flex items-center gap-0 px-4 py-3">
         <div className="flex-1 flex flex-wrap gap-x-2 gap-y-0.5 text-sm overflow-hidden">
           {orderedPlayers.map((p, i) => {
             const isMe = p.id === playerId;
@@ -383,6 +396,7 @@ export function DftQBoard({
             {remainingMs <= 0 ? "Time\u2019s up" : formatTime(remainingMs)}
           </span>
         )}
+        </div>
       </div>
 
       {showXOverlay && (
