@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function AuthErrorPage() {
   return (
     <main className="flex flex-col items-center justify-center min-h-screen gap-6 p-8">
@@ -6,12 +8,12 @@ export default function AuthErrorPage() {
         <p className="text-zinc-400 mb-6">
           An error occurred while signing in. Please try again.
         </p>
-        <a
+        <Link
           href="/"
           className="inline-block px-6 py-2.5 bg-zinc-700 hover:bg-zinc-600 text-zinc-100 rounded-full transition-colors"
         >
           Back to Home
-        </a>
+        </Link>
       </div>
     </main>
   );
