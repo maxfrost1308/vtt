@@ -260,7 +260,6 @@ export const descendedFromQueenFramework: GameFramework = {
           ...s,
           version: s.version + 1,
           currentIndex: newIndex,
-          turnIndex: (s.turnIndex + 1) % s.playerOrder.length,
           dftqPhase: isEnd ? 'ended' : 'playing',
         };
       }

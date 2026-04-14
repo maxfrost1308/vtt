@@ -353,17 +353,11 @@ export function DftQBoard({
       <div className="shrink-0 flex items-center gap-0 px-4 py-3 border-t border-zinc-800/60 bg-zinc-900/80 backdrop-blur">
         <div className="flex-1 flex flex-wrap gap-x-2 gap-y-0.5 text-sm overflow-hidden">
           {orderedPlayers.map((p, i) => {
-            const isTurn = i === s.turnIndex;
             const isMe = p.id === playerId;
             return (
               <span key={p.id} className="flex items-center gap-1">
                 {i > 0 && <span className="text-zinc-700 mr-1">·</span>}
-                {isTurn && <span className="text-amber-400">▸</span>}
-                <span
-                  className={clsx(
-                    isTurn ? 'text-amber-400 font-semibold' : isMe ? 'text-zinc-200' : 'text-zinc-500'
-                  )}
-                >
+                <span className={clsx(isMe ? 'text-zinc-200' : 'text-zinc-500')}>
                   {isMe ? 'You' : p.displayName}{p.isSpectator ? ' (watching)' : ''}
                 </span>
               </span>
