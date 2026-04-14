@@ -257,10 +257,8 @@ export function HomeClient({ user }: HomeClientProps) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-8 p-8">
         <div className="text-center max-w-md">
-          <h1 className="text-4xl font-bold tracking-tight text-zinc-100 mb-3">VTT</h1>
-          <p className="text-zinc-400 text-lg">
-            Play storygames and TTRPGs online with your friends.
-          </p>
+          <h1 className="text-5xl sm:text-5xl font-bold text-zinc-100 mb-3">Talekeeper's Table</h1>
+          <p className="text-lg text-zinc-400 italic mt-2">Come to the table.</p>
         </div>
         <button
           onClick={handleSignIn}
@@ -290,7 +288,7 @@ export function HomeClient({ user }: HomeClientProps) {
   return (
     <div className="flex flex-col items-center gap-10 p-8 min-h-screen">
       <header className="w-full max-w-2xl flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-zinc-100">VTT</h1>
+        <h1 className="text-2xl font-bold text-zinc-100">Talekeeper's Table</h1>
         <div className="flex items-center gap-4">
           <span className="text-zinc-400 text-sm">{user.email}</span>
           <button

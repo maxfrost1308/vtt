@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'VTT — Talekeeper',
-  description: 'Play storygames and TTRPGs with friends online.',
+  title: "Talekeeper's Table",
+  description: 'A virtual table for storytelling card games',
 };
 
 export default function RootLayout({
