@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { renderCard, scopeCss } from 'forge';
+import { renderCard, scopeCss, preprocessCssAssets } from 'forge';
 import type { ForgeProject, ForgeRow } from 'forge';
 
 interface CardRendererProps {
@@ -15,28 +15,31 @@ interface CardBackProps {
   cardTypeId: string;
 }
 
+function buildGetAsset(project: ForgeProject) {
+  return (name: string) => project.assets[name] ?? null;
+}
+
+function buildCss(rawCss: string, cardTypeId: string, getAsset: (name: string) => ReturnType<ReturnType<typeof buildGetAsset>>) {
+  return scopeCss(preprocessCssAssets(rawCss, getAsset), cardTypeId);
+}
+
 export function CardRenderer({ project, cardTypeId, row }: CardRendererProps) {
   const cardType = project.cardTypes.find((ct) => ct.id === cardTypeId);
 
   const { html, css } = useMemo(() => {
     if (!cardType) return { html: '', css: '' };
 
-    const getAsset = (name: string) => project.assets[name] ?? null;
+    const getAsset = buildGetAsset(project);
 
     const renderedHtml = renderCard(
       cardType.frontTemplate,
       row,
       cardType.fields,
       cardType,
-      {
-        globalVariables: project.globalVariables,
-        getAsset,
-      }
+      { globalVariables: project.globalVariables, getAsset }
     );
 
-    const scopedCss = scopeCss(cardType.css, cardType.id);
-
-    return { html: renderedHtml, css: scopedCss };
+    return { html: renderedHtml, css: buildCss(cardType.css, cardType.id, getAsset) };
   }, [cardType, row, project]);
 
   if (!cardType) return null;
@@ -45,7 +48,7 @@ export function CardRenderer({ project, cardTypeId, row }: CardRendererProps) {
 
   return (
     <div
-      className={`card-type-${cardType.id}`}
+      data-card-type={cardType.id}
       style={{ width, height, position: 'relative', overflow: 'hidden' }}
     >
       <style>{css}</style>
@@ -60,22 +63,17 @@ export function CardBack({ forgeProject, cardTypeId }: CardBackProps) {
   const rendered = useMemo(() => {
     if (!cardType?.backTemplate) return null;
 
-    const getAsset = (name: string) => forgeProject.assets[name] ?? null;
+    const getAsset = buildGetAsset(forgeProject);
 
     const html = renderCard(
       cardType.backTemplate,
       {} as ForgeRow,
       cardType.fields,
       cardType,
-      {
-        globalVariables: forgeProject.globalVariables,
-        getAsset,
-      }
+      { globalVariables: forgeProject.globalVariables, getAsset }
     );
 
-    const css = scopeCss(cardType.css, cardType.id);
-
-    return { html, css };
+    return { html, css: buildCss(cardType.css, cardType.id, getAsset) };
   }, [cardType, forgeProject]);
 
   if (!cardType) return null;
@@ -85,8 +83,8 @@ export function CardBack({ forgeProject, cardTypeId }: CardBackProps) {
   if (rendered) {
     return (
       <div
-        className={`card-type-${cardType.id}`}
-        style={{ width, height, position: 'relative', overflow: 'hidden', background: '#27272a' }}
+        data-card-type={cardType.id}
+        style={{ width, height, position: 'relative', overflow: 'hidden' }}
       >
         <style>{rendered.css}</style>
         <div dangerouslySetInnerHTML={{ __html: rendered.html }} />

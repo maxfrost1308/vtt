@@ -73,6 +73,7 @@ declare module 'forge' {
     deps?: RenderDeps
   ): string;
   export function scopeCss(css: string, scope: string): string;
+  export function preprocessCssAssets(css: string, getAsset?: (name: string) => ForgeAsset | null | undefined): string;
   export function parseCsv(csvText: string): Promise<{ data: ForgeRow[]; errors: unknown[] }>;
   export function generateCsv(fields: ForgeField[], rows: ForgeRow[]): string;
   export function hashTagColor(value: string): string;
