@@ -46,6 +46,7 @@ export function HomeClient({ user }: HomeClientProps) {
   const [joinError, setJoinError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [hostingFile, setHostingFile] = useState<string | null>(null);
 
   const selectedServerFile = serverFiles.find((f) => f.name === selectedFile);
   const activeFramework = frameworks.find((fw) => fw.id === selectedFramework);
@@ -224,6 +225,34 @@ export function HomeClient({ user }: HomeClientProps) {
     window.location.href = `${basePath}/room/${joinCode.trim().toLowerCase()}`;
   };
 
+  const handleHostGame = async (file: ServerForgeFile) => {
+    if (!file.config || !user) return;
+    setHostingFile(file.name);
+    setCreateError(null);
+
+    try {
+      const response = await fetch(`${basePath}/api/rooms`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          forge_file: file.name,
+          game_config: file.config,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = (await response.json()) as { error?: string };
+        throw new Error(data.error ?? 'Failed to create room');
+      }
+
+      const { code } = (await response.json()) as { code: string };
+      window.location.href = `${basePath}/room/${code}`;
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : 'Failed to create room');
+      setHostingFile(null);
+    }
+  };
+
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-8 p-8">
@@ -254,6 +283,10 @@ export function HomeClient({ user }: HomeClientProps) {
 
   const canSave = selectedFramework && loadedFile && allRequiredSlotsMapped;
 
+  const availableGames = user.isAdmin
+    ? serverFiles
+    : serverFiles.filter((f) => f.config?.free === true);
+
   return (
     <div className="flex flex-col items-center gap-10 p-8 min-h-screen">
       <header className="w-full max-w-2xl flex items-center justify-between">
@@ -270,68 +303,62 @@ export function HomeClient({ user }: HomeClientProps) {
       </header>
 
       <main className="w-full max-w-2xl flex flex-col gap-8">
-        {!user.isAdmin && serverFiles.some((f) => f.config?.free) && (
-          <section className="flex flex-col gap-5 p-6 bg-zinc-800 rounded-2xl border border-zinc-700">
+        {availableGames.length > 0 ? (
+          <section className="flex flex-col gap-5">
             <h2 className="text-xl font-semibold text-zinc-100">Host a Game</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {serverFiles
-                .filter((f) => f.config?.free)
-                .map((file) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {availableGames.map((file) => {
+                const fw = frameworks.find((f) => f.id === file.config?.framework);
+                const title = fw?.name ?? file.name.replace(/\.forge$/, '');
+                const description = fw?.description ?? null;
+                const isConfigured = file.config !== null;
+                const isHosting = hostingFile === file.name;
+
+                return (
                   <div
                     key={file.name}
-                    className="flex items-center justify-between p-4 rounded-xl border border-zinc-700 bg-zinc-800/50"
+                    className="flex flex-col justify-between p-5 bg-zinc-800 rounded-2xl border border-zinc-700 hover:border-zinc-500 transition-colors"
                   >
-                    <div>
-                      <div className="font-semibold text-zinc-100 text-sm">
-                        {file.name.replace(/\.forge$/, '')}
-                      </div>
-                      <div className="text-xs text-zinc-500 mt-1">
-                        {file.config!.framework}
-                      </div>
+                    <div className="mb-4">
+                      <h3 className="font-semibold text-zinc-100">{title}</h3>
+                      {description && (
+                        <p className="text-sm text-zinc-400 mt-1">{description}</p>
+                      )}
+                      {user.isAdmin && file.config?.free && (
+                        <span className="inline-block mt-2 text-xs text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">
+                          Free
+                        </span>
+                      )}
+                      {user.isAdmin && !isConfigured && (
+                        <span className="inline-block mt-2 text-xs text-zinc-500 bg-zinc-700 px-2 py-0.5 rounded-full">
+                          Unconfigured
+                        </span>
+                      )}
                     </div>
                     <button
-                      onClick={() => {
-                        setSelectedFile(file.name);
-                        setIsCreating(true);
-                        setCreateError(null);
-                        fetch(`${basePath}/api/rooms`, {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            forge_file: file.name,
-                            game_config: file.config,
-                          }),
-                        })
-                          .then(async (r) => {
-                            if (!r.ok) {
-                              const data = (await r.json()) as { error?: string };
-                              throw new Error(data.error ?? 'Failed to create room');
-                            }
-                            return r.json() as Promise<{ code: string }>;
-                          })
-                          .then(({ code }) => {
-                            window.location.href = `${basePath}/room/${code}`;
-                          })
-                          .catch((err) => {
-                            setCreateError(err instanceof Error ? err.message : 'Failed to create room');
-                            setIsCreating(false);
-                          });
-                      }}
-                      disabled={isCreating}
-                      className="px-5 py-2 bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-700 disabled:text-zinc-500 text-black font-bold rounded-full transition-colors text-sm"
+                      onClick={() => handleHostGame(file)}
+                      disabled={!isConfigured || hostingFile !== null}
+                      className="bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white rounded-full px-4 py-2 text-sm font-medium transition-colors"
                     >
-                      {isCreating && selectedFile === file.name ? 'Creating\u2026' : 'Host'}
+                      {isHosting ? 'Creating\u2026' : !isConfigured ? 'Not configured' : 'Host'}
                     </button>
                   </div>
-                ))}
+                );
+              })}
             </div>
-            {createError && (
+            {createError && hostingFile === null && (
               <p className="text-sm text-red-400 bg-red-900/20 border border-red-800 rounded-lg px-3 py-2">
                 {createError}
               </p>
             )}
           </section>
-        )}
+        ) : !user.isAdmin ? (
+          <section className="p-6 bg-zinc-800 rounded-2xl border border-zinc-700">
+            <p className="text-sm text-zinc-500">
+              No games available. Ask an admin to set up a game.
+            </p>
+          </section>
+        ) : null}
 
         {user.isAdmin && (
           <section className="flex flex-col gap-5 p-6 bg-zinc-800 rounded-2xl border border-zinc-700">
