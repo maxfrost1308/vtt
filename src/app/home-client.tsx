@@ -37,6 +37,7 @@ export function HomeClient({ user }: HomeClientProps) {
   const [selectedFramework, setSelectedFramework] = useState<string>('');
   const [roleMappings, setRoleMappings] = useState<Record<string, string>>({});
   const [configValues, setConfigValues] = useState<Record<string, string>>({});
+  const [isFreeGame, setIsFreeGame] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -79,6 +80,7 @@ export function HomeClient({ user }: HomeClientProps) {
     setLoadedFile(null);
     setSelectedFramework('');
     setRoleMappings({});
+    setIsFreeGame(false);
     setLoadError(null);
     setSaveStatus('idle');
     setSaveError(null);
@@ -102,6 +104,7 @@ export function HomeClient({ user }: HomeClientProps) {
       if (serverConfig) {
         setSelectedFramework(serverConfig.framework);
         setRoleMappings({ ...serverConfig.roles });
+        setIsFreeGame(serverConfig.free ?? false);
         const cfgVals: Record<string, string> = {};
         if (serverConfig.config) {
           for (const [k, v] of Object.entries(serverConfig.config)) {
@@ -112,6 +115,7 @@ export function HomeClient({ user }: HomeClientProps) {
       } else {
         setSelectedFramework('');
         setRoleMappings({});
+        setIsFreeGame(false);
         setConfigValues({});
       }
     } catch (err) {
@@ -151,6 +155,7 @@ export function HomeClient({ user }: HomeClientProps) {
       framework: selectedFramework,
       roles: { ...roleMappings },
       ...(hasConfigValues ? { config: { ...configValues } } : {}),
+      ...(isFreeGame ? { free: true } : {}),
     };
 
     try {
@@ -442,6 +447,22 @@ export function HomeClient({ user }: HomeClientProps) {
                     ))}
                   </div>
                 )}
+
+                <div className="flex items-center gap-3 p-3 bg-zinc-700/50 rounded-lg border border-zinc-600">
+                  <input
+                    type="checkbox"
+                    id="freeGameToggle"
+                    checked={isFreeGame}
+                    onChange={(e) => {
+                      setIsFreeGame(e.target.checked);
+                      setSaveStatus('idle');
+                    }}
+                    className="w-4 h-4 rounded border-zinc-500 bg-zinc-600 cursor-pointer accent-amber-500"
+                  />
+                  <label htmlFor="freeGameToggle" className="text-sm text-zinc-300 cursor-pointer flex-1">
+                    Available for all players
+                  </label>
+                </div>
 
                 <div className="flex items-center gap-3">
                   <button
