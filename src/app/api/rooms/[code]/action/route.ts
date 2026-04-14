@@ -19,16 +19,24 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: { type: string; playerId: string; payload?: Record<string, unknown> };
+  let body: { type: string; payload?: Record<string, unknown> };
   try {
     body = (await request.json()) as typeof body;
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  const room = getRoom(code.toUpperCase());
+  const room = getRoom(code.toLowerCase());
   if (!room) {
     return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+  }
+
+  const player = room.players.find(p => p.userId === user.id);
+  if (!player) {
+    return NextResponse.json({ error: 'Not a member of this room' }, { status: 403 });
+  }
+  if (player.role === 'spectator') {
+    return NextResponse.json({ error: 'Spectators cannot perform actions' }, { status: 403 });
   }
 
   if (!room.gameState) {
@@ -42,7 +50,7 @@ export async function POST(
 
   const action: GameAction = {
     type: body.type,
-    playerId: body.playerId,
+    playerId: user.id,
     payload: body.payload,
   };
 
@@ -52,8 +60,8 @@ export async function POST(
   }
 
   const phase = nextState.phase === 'ended' ? 'ended' : room.phase;
-  updateGameState(code.toUpperCase(), nextState, phase);
+  updateGameState(code.toLowerCase(), nextState, phase);
 
-  const updatedRoom = getRoom(code.toUpperCase());
+  const updatedRoom = getRoom(code.toLowerCase());
   return NextResponse.json({ room: updatedRoom });
 }
