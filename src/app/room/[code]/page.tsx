@@ -41,6 +41,7 @@ export default async function RoomPage({ params }: RoomPageProps) {
     avatarUrl,
     joinedAt: new Date().toISOString(),
     role: 'player',
+    lastSeenAt: new Date().toISOString(),
   });
 
   const freshRoom = getRoom(code.toLowerCase())!;
