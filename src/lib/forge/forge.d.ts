@@ -73,6 +73,20 @@ declare module 'forge' {
     cardType: ForgeCardType | null,
     deps?: RenderDeps
   ): string;
+  export interface RenderFullCardResult {
+    html: string;
+    css: string;
+    width: string;
+    height: string;
+    cardTypeId: string;
+  }
+
+  export function renderFullCard(
+    project: ForgeProject,
+    cardTypeId: string,
+    row: ForgeRow,
+    options?: { side?: 'front' | 'back' }
+  ): RenderFullCardResult | null;
   export function scopeCss(css: string, scope: string): string;
   export function preprocessCssAssets(css: string, getAsset?: (name: string) => ForgeAsset | null | undefined): string;
   export function parseCsv(csvText: string): Promise<{ data: ForgeRow[]; errors: unknown[] }>;
