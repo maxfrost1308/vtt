@@ -86,7 +86,7 @@ export function CardBack({ forgeProject, cardTypeId }: CardBackProps) {
     return (
       <div
         className={`card-type-${cardType.id}`}
-        style={{ width, height, position: 'relative', overflow: 'hidden' }}
+        style={{ width, height, position: 'relative', overflow: 'hidden', background: '#27272a' }}
       >
         <style>{rendered.css}</style>
         <div dangerouslySetInnerHTML={{ __html: rendered.html }} />
