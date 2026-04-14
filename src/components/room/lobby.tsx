@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import clsx from 'clsx';
 import type { PlayerInfo } from '@/lib/frameworks/types';
 import { PlayerList } from './player-list';
@@ -39,6 +40,15 @@ export function Lobby({
   onTimerChange,
 }: LobbyProps) {
   const isHost = currentUserId === hostId;
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyInviteLink = () => {
+    const basePath = process.env.NEXT_PUBLIC_BASEPATH ?? '';
+    const inviteUrl = `${window.location.origin}${basePath}/room/${roomCode}`;
+    navigator.clipboard.writeText(inviteUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className="flex flex-col items-center gap-8 p-8 min-h-screen bg-zinc-900 text-zinc-100">
@@ -48,19 +58,19 @@ export function Lobby({
           <p className="text-zinc-400 mt-1 text-sm">{frameworkName}</p>
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-zinc-800 rounded-xl border border-zinc-700">
-          <div>
-            <p className="text-xs text-zinc-500 uppercase tracking-wider font-medium">Room Code</p>
-            <p className="text-2xl font-mono font-bold tracking-widest text-zinc-100 mt-0.5">
+        <div className="p-4 bg-zinc-800/50 rounded-xl border border-zinc-700">
+          <p className="text-xs text-zinc-500 uppercase tracking-wider font-medium mb-3">Invite Link</p>
+          <div className="flex flex-col gap-3">
+            <p className="text-2xl font-mono font-bold tracking-widest text-zinc-100">
               {roomCode}
             </p>
+            <button
+              onClick={handleCopyInviteLink}
+              className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-full text-sm font-medium transition-colors"
+            >
+              {copied ? 'Copied!' : 'Copy invite link'}
+            </button>
           </div>
-          <button
-            onClick={() => navigator.clipboard.writeText(roomCode)}
-            className="px-3 py-1.5 text-xs bg-zinc-700 hover:bg-zinc-600 text-zinc-300 rounded-lg transition-colors"
-          >
-            Copy
-          </button>
         </div>
 
         <div>
