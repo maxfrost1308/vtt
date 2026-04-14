@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { deserializeProject } from 'forge';
 import type { ForgeProject } from 'forge';
-import type { ServerRoom } from '@/lib/room/store';
+import type { ServerRoom, ServerPlayer } from '@/lib/room/store';
 import type { GameState, GameAction, PlayerInfo } from '@/lib/frameworks/types';
 import type { ForgeGameConfig } from '@/lib/forge/types';
 import { getFramework } from '@/lib/frameworks/index';
@@ -33,9 +33,11 @@ export function GameBoard({
   const [startError, setStartError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [timerDurationMs, setTimerDurationMs] = useState<number | null>(null);
+  const [showConnectionBanner, setShowConnectionBanner] = useState(false);
   const versionRef = useRef<number>(
     (initialRoom.gameState as GameState | null)?.version ?? -1
   );
+  const pollFailures = useRef<number>(0);
   const basePath = process.env.NEXT_PUBLIC_BASEPATH ?? '';
 
   useEffect(() => {
@@ -72,7 +74,15 @@ export function GameBoard({
           versionRef.current = incomingVersion;
           setRoom(incoming);
         }
+        // Reset failure count on successful poll
+        pollFailures.current = 0;
+        setShowConnectionBanner(false);
       } catch {
+        // Track consecutive poll failures
+        pollFailures.current++;
+        if (pollFailures.current >= 3) {
+          setShowConnectionBanner(true);
+        }
       }
     };
 
@@ -85,7 +95,7 @@ export function GameBoard({
     displayName: sp.displayName,
     avatarUrl: sp.avatarUrl,
     isHost: sp.userId === room.hostId,
-    isOnline: true,
+    isOnline: (sp as ServerPlayer & { isOnline?: boolean }).isOnline ?? true,
     isSpectator: sp.role === 'spectator',
   }));
 
@@ -204,6 +214,11 @@ export function GameBoard({
 
   return (
     <div className="flex flex-col min-h-screen">
+      {showConnectionBanner && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-zinc-800 text-zinc-300 text-sm text-center py-2">
+          Connection lost. Retrying...
+        </div>
+      )}
       <BoardComponent
         state={gameState}
         playerId={currentUserId}
