@@ -270,6 +270,69 @@ export function HomeClient({ user }: HomeClientProps) {
       </header>
 
       <main className="w-full max-w-2xl flex flex-col gap-8">
+        {!user.isAdmin && serverFiles.some((f) => f.config?.free) && (
+          <section className="flex flex-col gap-5 p-6 bg-zinc-800 rounded-2xl border border-zinc-700">
+            <h2 className="text-xl font-semibold text-zinc-100">Host a Game</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {serverFiles
+                .filter((f) => f.config?.free)
+                .map((file) => (
+                  <div
+                    key={file.name}
+                    className="flex items-center justify-between p-4 rounded-xl border border-zinc-700 bg-zinc-800/50"
+                  >
+                    <div>
+                      <div className="font-semibold text-zinc-100 text-sm">
+                        {file.name.replace(/\.forge$/, '')}
+                      </div>
+                      <div className="text-xs text-zinc-500 mt-1">
+                        {file.config!.framework}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setSelectedFile(file.name);
+                        setIsCreating(true);
+                        setCreateError(null);
+                        fetch(`${basePath}/api/rooms`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            forge_file: file.name,
+                            game_config: file.config,
+                          }),
+                        })
+                          .then(async (r) => {
+                            if (!r.ok) {
+                              const data = (await r.json()) as { error?: string };
+                              throw new Error(data.error ?? 'Failed to create room');
+                            }
+                            return r.json() as Promise<{ code: string }>;
+                          })
+                          .then(({ code }) => {
+                            window.location.href = `${basePath}/room/${code}`;
+                          })
+                          .catch((err) => {
+                            setCreateError(err instanceof Error ? err.message : 'Failed to create room');
+                            setIsCreating(false);
+                          });
+                      }}
+                      disabled={isCreating}
+                      className="px-5 py-2 bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-700 disabled:text-zinc-500 text-black font-bold rounded-full transition-colors text-sm"
+                    >
+                      {isCreating && selectedFile === file.name ? 'Creating\u2026' : 'Host'}
+                    </button>
+                  </div>
+                ))}
+            </div>
+            {createError && (
+              <p className="text-sm text-red-400 bg-red-900/20 border border-red-800 rounded-lg px-3 py-2">
+                {createError}
+              </p>
+            )}
+          </section>
+        )}
+
         {user.isAdmin && (
           <section className="flex flex-col gap-5 p-6 bg-zinc-800 rounded-2xl border border-zinc-700">
             <h2 className="text-xl font-semibold text-zinc-100">Game Configuration</h2>

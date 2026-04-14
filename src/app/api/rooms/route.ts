@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { access } from 'fs/promises';
+import { access, readFile } from 'fs/promises';
 import { join, basename } from 'path';
 import { createClient } from '@/lib/supabase/server';
 import { createRoom, getAllRoomCodes } from '@/lib/room/store';
@@ -7,7 +7,9 @@ import { generateRoomCode } from '@/lib/room/words';
 import type { ForgeGameConfig } from '@/lib/forge/types';
 
 const FORGE_DIR = '/data/forge-files';
-const ADMIN_IDS = (process.env.VTT_ADMIN_USER_IDS ?? '').split(',').filter(Boolean);
+function getAdminIds(): string[] {
+  return (process.env.VTT_ADMIN_USER_IDS ?? '').split(',').filter(Boolean);
+}
 
 export async function POST(request: Request): Promise<NextResponse> {
   const supabase = await createClient();
@@ -18,10 +20,6 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  if (ADMIN_IDS.length > 0 && !ADMIN_IDS.includes(user.id)) {
-    return NextResponse.json({ error: 'Only admins can create rooms' }, { status: 403 });
   }
 
   let body: { forge_file: string; game_config: ForgeGameConfig };
@@ -40,6 +38,20 @@ export async function POST(request: Request): Promise<NextResponse> {
     await access(join(FORGE_DIR, safeName));
   } catch {
     return NextResponse.json({ error: 'Forge file not found on server' }, { status: 404 });
+  }
+
+  const adminIds = getAdminIds();
+  if (adminIds.length > 0 && !adminIds.includes(user.id)) {
+    // Non-admin: only allowed if game is marked free on the server
+    const configPath = join(FORGE_DIR, safeName.replace(/\.forge$/, '.json'));
+    let serverConfig: ForgeGameConfig | null = null;
+    try {
+      const raw = await readFile(configPath, 'utf-8');
+      serverConfig = JSON.parse(raw) as ForgeGameConfig;
+    } catch {}
+    if (!serverConfig?.free) {
+      return NextResponse.json({ error: 'Only admins can create rooms for this game' }, { status: 403 });
+    }
   }
 
   const basePath = process.env.NEXT_PUBLIC_BASEPATH || '';
