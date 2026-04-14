@@ -31,11 +31,20 @@ export async function POST(
   const avatarUrl: string | null =
     (user.user_metadata?.['avatar_url'] as string | undefined) ?? null;
 
+  let spectator = false;
+  try {
+    const body = (await _request.json()) as { spectator?: boolean };
+    spectator = body.spectator === true;
+  } catch {
+    // No body or invalid JSON — default to player
+  }
+
   addPlayer(code.toUpperCase(), {
     userId: user.id,
     displayName,
     avatarUrl,
     joinedAt: new Date().toISOString(),
+    role: spectator ? 'spectator' : 'player',
   });
 
   const updatedRoom = getRoom(code.toUpperCase());

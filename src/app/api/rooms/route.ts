@@ -90,6 +90,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         displayName,
         avatarUrl,
         joinedAt: new Date().toISOString(),
+        role: 'player',
       },
     ],
     createdAt: new Date().toISOString(),

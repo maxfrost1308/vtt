@@ -81,6 +81,7 @@ export function DftQBoard({
   const [remainingMs, setRemainingMs] = useState<number | null>(null);
 
   const isHost = players.find((p) => p.id === playerId)?.isHost ?? false;
+  const isSpectator = players.find((p) => p.id === playerId)?.isSpectator ?? false;
   const deckTypeId = gameConfig.roles['deck'];
   const deckCardType = forgeProject.cardTypes.find((ct) => ct.id === deckTypeId);
 
@@ -169,7 +170,7 @@ export function DftQBoard({
             <span key={p.id}>
               {i > 0 && <span className="mr-3 text-zinc-700">·</span>}
               <span className={clsx(p.id === playerId && 'text-zinc-200 font-medium')}>
-                {p.id === playerId ? 'You' : p.displayName}
+                {p.id === playerId ? 'You' : p.displayName}{p.isSpectator ? ' (watching)' : ''}
               </span>
             </span>
           ))}
@@ -187,6 +188,24 @@ export function DftQBoard({
         )}
       </div>
     );
+  }
+
+  function generateStoryText(): string {
+    const entries = s.storyLog.filter((e) => e.note.trim());
+    const playerNames = orderedPlayers.map((p) => p.displayName).join(', ');
+    const date = new Date().toLocaleDateString();
+    const notesText = entries.map((e) => `• ${e.note}`).join('\n');
+    return `${forgeProject.name}\n${date}\nPlayers: ${playerNames}\n\n${notesText}`;
+  }
+
+  function downloadStory(text: string, gameName: string) {
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${gameName.replace(/\s+/g, '-').toLowerCase()}-story.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   if (s.dftqPhase === 'ended') {
@@ -231,11 +250,10 @@ export function DftQBoard({
                   </li>
                 ))}
             </ul>
-            <div className="flex justify-center">
+            <div className="flex justify-center gap-2">
               <button
                 onClick={() => {
-                  const entries = s.storyLog.filter((e) => e.note.trim());
-                  const text = `${forgeProject.name}\n\n${entries.map((e) => `• ${e.note}`).join('\n')}`;
+                  const text = generateStoryText();
                   navigator.clipboard.writeText(text).then(() => {
                     setStoryCopied(true);
                     setTimeout(() => setStoryCopied(false), 2000);
@@ -244,6 +262,15 @@ export function DftQBoard({
                 className="px-5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-full border border-zinc-700 text-sm transition-colors"
               >
                 {storyCopied ? 'Copied!' : 'Copy story'}
+              </button>
+              <button
+                onClick={() => {
+                  const text = generateStoryText();
+                  downloadStory(text, forgeProject.name);
+                }}
+                className="px-5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-full border border-zinc-700 text-sm transition-colors"
+              >
+                Download .txt
               </button>
             </div>
           </div>
@@ -269,14 +296,16 @@ export function DftQBoard({
 
   return (
     <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100 select-none overflow-hidden">
-      <button
-        onClick={handleXCard}
-        disabled={showXOverlay}
-        className="absolute top-4 right-4 z-20 w-11 h-11 flex items-center justify-center rounded-full bg-rose-950/80 hover:bg-rose-900 active:bg-rose-800 text-rose-400 hover:text-rose-300 border border-rose-900/60 text-base font-bold transition-colors"
-        aria-label="X-Card — skip this card"
-      >
-        ✕
-      </button>
+      {!isSpectator && (
+        <button
+          onClick={handleXCard}
+          disabled={showXOverlay}
+          className="absolute top-4 right-4 z-20 w-11 h-11 flex items-center justify-center rounded-full bg-rose-950/80 hover:bg-rose-900 active:bg-rose-800 text-rose-400 hover:text-rose-300 border border-rose-900/60 text-base font-bold transition-colors"
+          aria-label="X-Card — skip this card"
+        >
+          ✕
+        </button>
+      )}
 
       <div className="flex-1 flex items-center justify-center overflow-auto py-6 px-4">
         {deckCardType && currentRow ? (
@@ -335,14 +364,14 @@ export function DftQBoard({
                     isTurn ? 'text-amber-400 font-semibold' : isMe ? 'text-zinc-200' : 'text-zinc-500'
                   )}
                 >
-                  {isMe ? 'You' : p.displayName}
+                  {isMe ? 'You' : p.displayName}{p.isSpectator ? ' (watching)' : ''}
                 </span>
               </span>
             );
           })}
         </div>
 
-        {canAdvance && (
+        {canAdvance && !isSpectator && (
           <button
             onClick={() => onAction({ type: 'next', playerId })}
             className="ml-4 shrink-0 flex items-center gap-1.5 px-5 py-2.5 min-h-11 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-zinc-200 rounded-full border border-zinc-700 text-sm font-medium transition-colors"

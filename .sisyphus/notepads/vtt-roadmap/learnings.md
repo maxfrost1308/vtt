@@ -148,3 +148,24 @@ Matched DftQ board exactly:
 - Pattern: mirrors generic-card-draw exactly — slot `cards`, actions `begin`/`next`, phases `intro`/`playing`/`ended`
 - Slot name `cards` (not `deck`) — validate/createInitialState use `config.roles['cards']`
 - Board UI reuses same dark zinc palette, amber Begin button, bottom bar with player dots
+
+## [2026-04-14] Task: story-export
+- Enhanced copy format with game name/date/players
+- Added Download .txt button
+- Both buttons side-by-side in ended phase
+- Build passes with zero errors
+## [2026-04-14] Task: game-library
+- Replaced forge file dropdown with browsable card grid in home-client.tsx
+- Cards show game name (filename sans .forge), framework badge, ready-to-play indicator
+- Selected card: amber ring/border highlight via template literal conditionals
+- Play button (configured games) calls handleCreateRoom directly
+- Configure/Reconfigure button calls handleLoadFile to open admin config panel
+- Removed standalone Create Room button + unused hasSavedConfig derived value
+
+## [2026-04-14] Task: spectator-mode
+- Spectator role added to ServerPlayer (role: 'player' | 'spectator')
+- Join route accepts spectator:true in POST body
+- DftQ board hides Next/X-Card for spectators
+- Player bar shows '(watching)' suffix for spectators
+- room/[code]/page.tsx also calls addPlayer — needed role: 'player' there too
+- rooms/route.ts (create) needed role: 'player' for host player

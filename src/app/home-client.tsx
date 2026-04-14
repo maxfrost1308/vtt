@@ -47,7 +47,6 @@ export function HomeClient({ user }: HomeClientProps) {
 
   const selectedServerFile = serverFiles.find((f) => f.name === selectedFile);
   const activeFramework = frameworks.find((fw) => fw.id === selectedFramework);
-  const hasSavedConfig = selectedServerFile?.config !== null && selectedServerFile?.config !== undefined;
 
   useEffect(() => {
     if (!user) return;
@@ -264,52 +263,66 @@ export function HomeClient({ user }: HomeClientProps) {
             <h2 className="text-xl font-semibold text-zinc-100">Game Configuration</h2>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-2">
-                Forge file
+              <label className="block text-sm font-medium text-zinc-400 mb-3">
+                Game Library
               </label>
               {serverFiles.length === 0 ? (
                 <p className="text-sm text-zinc-500">
                   No .forge files found. Place them in the forge-files directory on the server.
                 </p>
               ) : (
-                <div className="flex gap-3">
-                  <div className="relative flex-1">
-                    <select
-                      value={selectedFile}
-                      onChange={(e) => handleFileChange(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-zinc-700 border border-zinc-600 rounded-full text-zinc-100 appearance-none pr-10 focus:outline-none focus:border-zinc-400 transition-colors"
-                    >
-                      {serverFiles.map((f) => (
-                        <option key={f.name} value={f.name}>
-                          {f.name} ({(f.size / 1024).toFixed(0)} KB)
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                        <path d="M4.427 5.427a.75.75 0 011.06-.013L8 7.822l2.513-2.408a.75.75 0 111.037 1.084l-3 2.874a.75.75 0 01-1.037 0l-3-2.874a.75.75 0 01-.086-1.07z" />
-                      </svg>
-                    </div>
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {serverFiles.map((file) => (
+                      <button
+                        key={file.name}
+                        onClick={() => handleFileChange(file.name)}
+                        className={`text-left p-4 rounded-xl border transition-all ${
+                          selectedFile === file.name
+                            ? 'border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/50'
+                            : 'border-zinc-700 bg-zinc-800/50 hover:border-zinc-600'
+                        }`}
+                      >
+                        <div className="font-semibold text-zinc-100 text-sm">
+                          {file.name.replace(/\.forge$/, '')}
+                        </div>
+                        <div className="text-xs text-zinc-500 mt-1">
+                          {file.config ? file.config.framework : 'Not configured'}
+                        </div>
+                        {file.config && (
+                          <span className="mt-2 inline-block text-xs text-amber-400">
+                            \u2713 Ready to play
+                          </span>
+                        )}
+                      </button>
+                    ))}
                   </div>
-                  {selectedServerFile && (
-                    <span
-                      className={`flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-                        selectedServerFile.config
-                          ? 'bg-emerald-900/40 text-emerald-400 border border-emerald-700/50'
-                          : 'bg-orange-900/40 text-orange-400 border border-orange-700/50'
-                      }`}
-                    >
-                      {selectedServerFile.config ? 'Configured' : 'Unconfigured'}
-                    </span>
+
+                  {selectedFile && selectedServerFile && (
+                    <div className="flex gap-3 mt-4">
+                      {selectedServerFile.config && (
+                        <button
+                          onClick={handleCreateRoom}
+                          disabled={isCreating}
+                          className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-700 disabled:text-zinc-500 text-black font-bold rounded-full transition-colors"
+                        >
+                          {isCreating ? 'Creating\u2026' : '\u25b6 Play'}
+                        </button>
+                      )}
+                      <button
+                        onClick={handleLoadFile}
+                        disabled={!selectedFile || isLoading}
+                        className="px-5 py-2.5 bg-zinc-600 hover:bg-zinc-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-zinc-100 font-medium rounded-full transition-colors"
+                      >
+                        {isLoading
+                          ? 'Loading\u2026'
+                          : selectedServerFile.config
+                            ? 'Reconfigure'
+                            : 'Configure'}
+                      </button>
+                    </div>
                   )}
-                  <button
-                    onClick={handleLoadFile}
-                    disabled={!selectedFile || isLoading}
-                    className="px-5 py-2.5 bg-zinc-600 hover:bg-zinc-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-zinc-100 font-medium rounded-full transition-colors"
-                  >
-                    {isLoading ? 'Loading\u2026' : 'Load'}
-                  </button>
-                </div>
+                </>
               )}
             </div>
 
@@ -447,13 +460,7 @@ export function HomeClient({ user }: HomeClientProps) {
               </p>
             )}
 
-            <button
-              onClick={handleCreateRoom}
-              disabled={!hasSavedConfig || isCreating}
-              className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-700 disabled:text-zinc-500 text-black font-bold rounded-full transition-colors"
-            >
-              {isCreating ? 'Creating room\u2026' : 'Create Room'}
-            </button>
+
           </section>
         )}
 

@@ -300,7 +300,7 @@ Wave 4 (Longer term — parallel):
 
 ---
 
-- [ ] 15. Game library
+- [x] 15. Game library
 
   **What to do**:
   - Replace the current file dropdown with a browsable card grid
@@ -313,7 +313,7 @@ Wave 4 (Longer term — parallel):
 
 ---
 
-- [ ] 16. Spectator mode
+- [x] 16. Spectator mode
 
   **What to do**:
   - Join room as spectator (not in player rotation)
@@ -326,7 +326,7 @@ Wave 4 (Longer term — parallel):
 
 ---
 
-- [ ] 17. Share/export story log
+- [x] 17. Share/export story log
 
   **What to do**:
   - On ended screen: "Copy story" button

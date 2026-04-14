@@ -9,6 +9,7 @@ export interface ServerPlayer {
   displayName: string;
   avatarUrl: string | null;
   joinedAt: string;
+  role: 'player' | 'spectator';
 }
 
 export interface ServerRoom {

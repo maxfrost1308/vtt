@@ -33,6 +33,7 @@ export interface PlayerInfo {
   avatarUrl: string | null;
   isHost: boolean;
   isOnline: boolean;
+  isSpectator?: boolean;
 }
 
 export interface BoardProps {

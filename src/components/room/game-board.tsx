@@ -86,6 +86,7 @@ export function GameBoard({
     avatarUrl: sp.avatarUrl,
     isHost: sp.userId === room.hostId,
     isOnline: true,
+    isSpectator: sp.role === 'spectator',
   }));
 
   const framework = getFramework(gameConfig.framework);
