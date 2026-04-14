@@ -28,7 +28,10 @@ export interface ServerRoom {
 const ROOMS_DIR = '/data/forge-files/rooms/';
 const MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
-const globalWithRooms = globalThis as unknown as { __vttRooms?: Map<string, ServerRoom> };
+const globalWithRooms = globalThis as unknown as {
+  __vttRooms?: Map<string, ServerRoom>;
+  __vttCleanupTimer?: NodeJS.Timeout;
+};
 if (!globalWithRooms.__vttRooms) {
   globalWithRooms.__vttRooms = new Map();
 
@@ -56,8 +59,39 @@ if (!globalWithRooms.__vttRooms) {
   } catch {
     console.warn('[vtt] Could not load persisted rooms from', ROOMS_DIR);
   }
+
+  // Initialize cleanup timer
+  if (!globalWithRooms.__vttCleanupTimer) {
+    globalWithRooms.__vttCleanupTimer = setInterval(() => cleanupStaleRooms(), 5 * 60 * 1000);
+  }
 }
 const rooms = globalWithRooms.__vttRooms;
+
+export function cleanupStaleRooms(): void {
+  const now = Date.now();
+  const STALE_PLAYER_MS = 30 * 60 * 1000;
+
+  for (const [code, room] of rooms) {
+    const roomAge = now - new Date(room.createdAt).getTime();
+
+    if (roomAge > MAX_AGE_MS) {
+      deleteRoom(code);
+      continue;
+    }
+
+    if (room.players.length === 0) {
+      deleteRoom(code);
+      continue;
+    }
+
+    const allPlayersStale = room.players.every(
+      (p) => !p.lastSeenAt || now - new Date(p.lastSeenAt).getTime() > STALE_PLAYER_MS
+    );
+    if (allPlayersStale) {
+      deleteRoom(code);
+    }
+  }
+}
 
 function persistRoom(room: ServerRoom): void {
   writeFile(join(ROOMS_DIR, room.code + '.json'), JSON.stringify(room, null, 2)).catch(() => {});
