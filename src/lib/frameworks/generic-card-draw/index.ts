@@ -12,9 +12,21 @@ import type {
 import { GenericCardDrawBoard } from './board';
 
 export interface GenericCardDrawState extends GameState {
+  genericPhase: 'intro' | 'playing' | 'ended';
   deck: number[];
-  discard: number[];
-  currentCard: number | null;
+  currentIndex: number;
+}
+
+type GenericCardDrawActionType = 'begin' | 'next';
+
+interface GenericCardDrawAction extends GameAction {
+  type: GenericCardDrawActionType;
+}
+
+const GENERIC_ACTIONS = new Set<string>(['begin', 'next']);
+
+function isGenericAction(action: GameAction): action is GenericCardDrawAction {
+  return GENERIC_ACTIONS.has(action.type);
 }
 
 const SLOTS: FrameworkSlot[] = [
@@ -26,10 +38,21 @@ const SLOTS: FrameworkSlot[] = [
   },
 ];
 
+function shuffle(arr: number[]): number[] {
+  const out = [...arr];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = out[i]!;
+    out[i] = out[j]!;
+    out[j] = tmp;
+  }
+  return out;
+}
+
 export const genericCardDrawFramework: GameFramework = {
   id: 'generic-card-draw',
   name: 'Generic Card Draw',
-  description: 'Draw cards from a deck. Supports draw, shuffle, and reset.',
+  description: 'Draw cards from a deck one at a time. Conversation-first, no turn restrictions.',
   slots: SLOTS,
   configFields: [],
 
@@ -57,63 +80,41 @@ export const genericCardDrawFramework: GameFramework = {
       .filter(({ row }) => row._type === deckCardTypeId)
       .map(({ i }) => i);
 
-    const shuffled = [...indices].sort(() => Math.random() - 0.5);
+    const shuffled = shuffle(indices);
 
     return {
-      phase: 'lobby',
+      phase: 'playing',
       turnIndex: 0,
       playerOrder: [...playerIds],
       version: 0,
+      genericPhase: 'intro',
       deck: shuffled,
-      discard: [],
-      currentCard: null,
+      currentIndex: -1,
     };
   },
 
   reduce(state: GameState, action: GameAction): GenericCardDrawState | null {
     const s = state as GenericCardDrawState;
+    if (!isGenericAction(action)) return null;
 
-    if (action.type === 'draw') {
-      if (s.deck.length === 0) return null;
-      const [drawn, ...remaining] = s.deck;
-      const discard =
-        s.currentCard !== null ? [...s.discard, s.currentCard] : [...s.discard];
-      return {
-        ...s,
-        version: s.version + 1,
-        deck: remaining,
-        discard,
-        currentCard: drawn,
-        phase: remaining.length === 0 ? 'ended' : s.phase,
-      };
-    }
+    switch (action.type) {
+      case 'begin': {
+        if (s.genericPhase !== 'intro') return null;
+        return { ...s, version: s.version + 1, genericPhase: 'playing', currentIndex: 0 };
+      }
 
-    if (action.type === 'shuffle') {
-      const allCards = [...s.deck, ...s.discard];
-      if (s.currentCard !== null) allCards.push(s.currentCard);
-      const reshuffled = [...allCards].sort(() => Math.random() - 0.5);
-      return {
-        ...s,
-        version: s.version + 1,
-        deck: reshuffled,
-        discard: [],
-        currentCard: null,
-        phase: 'playing',
-      };
-    }
-
-    if (action.type === 'reset') {
-      const allCards = [...s.deck, ...s.discard];
-      if (s.currentCard !== null) allCards.push(s.currentCard);
-      const reshuffled = [...allCards].sort(() => Math.random() - 0.5);
-      return {
-        ...s,
-        version: s.version + 1,
-        deck: reshuffled,
-        discard: [],
-        currentCard: null,
-        phase: 'playing',
-      };
+      case 'next': {
+        if (s.genericPhase !== 'playing') return null;
+        const newIndex = s.currentIndex + 1;
+        if (newIndex >= s.deck.length) return null;
+        const isEnded = newIndex >= s.deck.length - 1;
+        return {
+          ...s,
+          version: s.version + 1,
+          currentIndex: newIndex,
+          genericPhase: isEnded ? 'ended' : 'playing',
+        };
+      }
     }
 
     return null;
@@ -121,22 +122,15 @@ export const genericCardDrawFramework: GameFramework = {
 
   getAvailableActions(state: GameState, playerId: string): GameAction[] {
     const s = state as GenericCardDrawState;
-    if (s.phase !== 'playing') return [];
-
-    const currentPlayerId = s.playerOrder[s.turnIndex];
-    if (currentPlayerId !== playerId) return [];
-
     const actions: GameAction[] = [];
 
-    if (s.deck.length > 0) {
-      actions.push({ type: 'draw', playerId });
+    if (s.genericPhase === 'intro') {
+      actions.push({ type: 'begin', playerId });
     }
 
-    if (s.discard.length > 0 || (s.deck.length === 0 && s.currentCard !== null)) {
-      actions.push({ type: 'shuffle', playerId });
+    if (s.genericPhase === 'playing' && s.currentIndex + 1 < s.deck.length) {
+      actions.push({ type: 'next', playerId });
     }
-
-    actions.push({ type: 'reset', playerId });
 
     return actions;
   },

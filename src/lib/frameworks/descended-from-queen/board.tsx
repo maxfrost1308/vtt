@@ -1,10 +1,61 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import clsx from 'clsx';
 import type { BoardProps, PlayerInfo } from '@/lib/frameworks/types';
 import type { DftQState } from './index';
 import { CardRenderer } from '@/components/card-renderer';
+
+/** Convert a CSS dimension (e.g. "63.5mm") to pixels. */
+function parsePx(v: string): number {
+  const m = v.match(/^([\d.]+)\s*mm$/);
+  if (m) return parseFloat(m[1]) * (96 / 25.4);
+  return parseFloat(v) || 0;
+}
+
+function ScaledCard({
+  cardType,
+  children,
+}: {
+  cardType: { cardSize: { width: string; height: string } };
+  children: ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  const nativeW = parsePx(cardType.cardSize.width);
+  const nativeH = parsePx(cardType.cardSize.height);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !nativeW) return;
+
+    const update = () => {
+      setScale(Math.min(1, el.clientWidth / nativeW));
+    };
+    update();
+
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [nativeW]);
+
+  return (
+    <div ref={ref} className="w-full">
+      <div
+        style={{
+          width: nativeW * scale,
+          height: nativeH * scale,
+          margin: '0 auto',
+        }}
+      >
+        <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function DftQBoard({
   state,
@@ -16,6 +67,8 @@ export function DftQBoard({
 }: BoardProps) {
   const s = state as DftQState;
   const [showXOverlay, setShowXOverlay] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [cardVisible, setCardVisible] = useState(true);
 
   const isHost = players.find((p) => p.id === playerId)?.isHost ?? false;
   const deckTypeId = gameConfig.roles['deck'];
@@ -39,19 +92,41 @@ export function DftQBoard({
     return () => clearTimeout(timer);
   }, [showXOverlay, onAction, playerId]);
 
+  useEffect(() => {
+    setCardVisible(false);
+    const timer = setTimeout(() => setCardVisible(true), 150);
+    return () => clearTimeout(timer);
+  }, [s.currentIndex]);
+
   if (s.dftqPhase === 'intro') {
     const creatorRow = forgeProject.data[s.chosenCreator];
 
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-900 text-zinc-100 gap-8 px-6 py-10">
-        {deckCardType && creatorRow && (
-          <div className="rounded-2xl overflow-hidden shadow-2xl shadow-black/60 ring-1 ring-white/10">
-            <CardRenderer
-              project={forgeProject}
-              cardTypeId={deckCardType.id}
-              row={creatorRow}
-            />
+        {!bannerDismissed && (
+          <div className="w-full max-w-md flex items-start gap-3 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-zinc-300">
+            <span className="text-amber-400 mt-0.5">🎙</span>
+            <p className="flex-1">This game is played over voice chat. Join your Discord call to begin.</p>
+            <button
+              onClick={() => setBannerDismissed(true)}
+              className="text-zinc-500 hover:text-zinc-300 ml-2 min-w-[44px] min-h-[44px] flex items-center justify-center -mr-2 -mt-1"
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
           </div>
+        )}
+
+        {deckCardType && creatorRow && (
+          <ScaledCard cardType={deckCardType}>
+            <div className="rounded-2xl overflow-hidden shadow-2xl shadow-black/60 ring-1 ring-white/10">
+              <CardRenderer
+                project={forgeProject}
+                cardTypeId={deckCardType.id}
+                row={creatorRow}
+              />
+            </div>
+          </ScaledCard>
         )}
 
         <div className="text-center space-y-1">
@@ -97,13 +172,15 @@ export function DftQBoard({
         </p>
 
         {deckCardType && endRow && (
-          <div className="rounded-2xl overflow-hidden shadow-2xl shadow-black/60 ring-1 ring-rose-900/60">
-            <CardRenderer
-              project={forgeProject}
-              cardTypeId={deckCardType.id}
-              row={endRow}
-            />
-          </div>
+          <ScaledCard cardType={deckCardType}>
+            <div className="rounded-2xl overflow-hidden shadow-2xl shadow-black/60 ring-1 ring-rose-900/60">
+              <CardRenderer
+                project={forgeProject}
+                cardTypeId={deckCardType.id}
+                row={endRow}
+              />
+            </div>
+          </ScaledCard>
         )}
 
         <div className="text-center space-y-3">
@@ -134,7 +211,7 @@ export function DftQBoard({
       <button
         onClick={handleXCard}
         disabled={showXOverlay}
-        className="absolute top-4 right-4 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-rose-950/80 hover:bg-rose-900 active:bg-rose-800 text-rose-400 hover:text-rose-300 border border-rose-900/60 text-sm font-bold transition-colors"
+        className="absolute top-4 right-4 z-20 w-11 h-11 flex items-center justify-center rounded-full bg-rose-950/80 hover:bg-rose-900 active:bg-rose-800 text-rose-400 hover:text-rose-300 border border-rose-900/60 text-base font-bold transition-colors"
         aria-label="X-Card — skip this card"
       >
         ✕
@@ -142,12 +219,16 @@ export function DftQBoard({
 
       <div className="flex-1 flex items-center justify-center overflow-auto py-6 px-4">
         {deckCardType && currentRow ? (
-          <div className="rounded-2xl overflow-hidden shadow-2xl shadow-black/80 ring-1 ring-white/5">
-            <CardRenderer
-              project={forgeProject}
-              cardTypeId={deckCardType.id}
-              row={currentRow}
-            />
+          <div className={clsx('transition-opacity duration-150', cardVisible ? 'opacity-100' : 'opacity-0')}>
+            <ScaledCard cardType={deckCardType}>
+              <div className="rounded-2xl overflow-hidden shadow-2xl shadow-black/80 ring-1 ring-white/5">
+                <CardRenderer
+                  project={forgeProject}
+                  cardTypeId={deckCardType.id}
+                  row={currentRow}
+                />
+              </div>
+            </ScaledCard>
           </div>
         ) : (
           <div className="text-zinc-700 text-sm">Loading…</div>
@@ -178,7 +259,7 @@ export function DftQBoard({
         {canAdvance && (
           <button
             onClick={() => onAction({ type: 'next', playerId })}
-            className="ml-4 shrink-0 flex items-center gap-1.5 px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-zinc-200 rounded-full border border-zinc-700 text-sm font-medium transition-colors"
+            className="ml-4 shrink-0 flex items-center gap-1.5 px-5 py-2.5 min-h-11 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-zinc-200 rounded-full border border-zinc-700 text-sm font-medium transition-colors"
           >
             <span>Next</span>
             <span className="text-zinc-400">→</span>

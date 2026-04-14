@@ -110,7 +110,7 @@ Wave 4 (Longer term — parallel):
 
 ## TODOs
 
-- [ ] 1. Git commit all VTT work
+- [x] 1. Git commit all VTT work
 
   **What to do**:
   - Stage all files in /home/max/talekeeper/github/vtt/
@@ -127,7 +127,7 @@ Wave 4 (Longer term — parallel):
 
 ---
 
-- [ ] 2. Set up GitHub webhook on vtt repo
+- [x] 2. Set up GitHub webhook on vtt repo
 
   **What to do**:
   - On GitHub repo Settings > Webhooks > Add webhook
@@ -156,7 +156,7 @@ Wave 4 (Longer term — parallel):
 
 ---
 
-- [ ] 4. Verify prod deployment
+- [x] 4. Verify prod deployment
 
   **What to do**:
   - Rebuild vtt-prod container
@@ -169,7 +169,7 @@ Wave 4 (Longer term — parallel):
 
 ---
 
-- [ ] 5. Mobile responsiveness
+- [x] 5. Mobile responsiveness
 
   **What to do**:
   - Cards must scale to fit mobile viewport (max-width: 100vw, constrained height)
@@ -183,7 +183,7 @@ Wave 4 (Longer term — parallel):
 
 ---
 
-- [ ] 6. "Join voice on Discord" banner
+- [x] 6. "Join voice on Discord" banner
 
   **What to do**:
   - Show a dismissible banner at the top of the intro screen
@@ -196,7 +196,7 @@ Wave 4 (Longer term — parallel):
 
 ---
 
-- [ ] 7. Card transitions
+- [x] 7. Card transitions
 
   **What to do**:
   - When Next is tapped: current card fades out, new card fades in
@@ -209,7 +209,7 @@ Wave 4 (Longer term — parallel):
 
 ---
 
-- [ ] 8. Update generic-card-draw framework
+- [x] 8. Update generic-card-draw framework
 
   **What to do**:
   - Simplify to match DftQ philosophy: one card at a time, anyone advances
