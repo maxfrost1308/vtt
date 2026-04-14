@@ -67,9 +67,10 @@ export function GameBoard({
         const incoming = data.room;
         const incomingVersion = (incoming.gameState as GameState | null)?.version ?? -1;
         if (
-          incomingVersion !== versionRef.current ||
-          incoming.phase !== room.phase ||
-          incoming.players.length !== room.players.length
+          incomingVersion >= versionRef.current &&
+          (incomingVersion > versionRef.current ||
+           incoming.phase !== room.phase ||
+           incoming.players.length !== room.players.length)
         ) {
           versionRef.current = incomingVersion;
           setRoom(incoming);
