@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import type { BoardProps, PlayerInfo, GameAction } from '@/lib/frameworks/types';
 import type { DftQState } from './index';
 import { CardRenderer, CardBack } from '@/components/card-renderer';
+import { FlippableCard } from '@/components/flippable-card';
 
 /** Convert a CSS dimension (e.g. "63.5mm") to pixels. */
 function parsePx(v: string): number {
@@ -75,7 +76,8 @@ export function DftQBoard({
   const s = state as DftQState;
   const [showXOverlay, setShowXOverlay] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(false);
-  const [cardVisible, setCardVisible] = useState(true);
+  const [animPhase, setAnimPhase] = useState<'idle' | 'sliding' | 'showing-back' | 'flipping'>('idle');
+  const pendingNextRef = useRef(false);
   const [noteInput, setNoteInput] = useState('');
   const [storyCopied, setStoryCopied] = useState(false);
   const [remainingMs, setRemainingMs] = useState<number | null>(null);
@@ -105,9 +107,22 @@ export function DftQBoard({
   }, [showXOverlay, onAction, playerId]);
 
   useEffect(() => {
-    setCardVisible(false);
-    const timer = setTimeout(() => setCardVisible(true), 150);
-    return () => clearTimeout(timer);
+    if (!pendingNextRef.current) {
+      setAnimPhase('idle');
+      return;
+    }
+    pendingNextRef.current = false;
+
+    setAnimPhase('sliding');
+    const t1 = setTimeout(() => setAnimPhase('showing-back'), 300);
+    const t2 = setTimeout(() => setAnimPhase('flipping'), 500);
+    const t3 = setTimeout(() => setAnimPhase('idle'), 1200);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
   }, [s.currentIndex]);
 
   useEffect(() => {
@@ -295,10 +310,14 @@ export function DftQBoard({
   const displayRow =
     displayCardDataIndex !== undefined ? forgeProject.data[displayCardDataIndex] : null;
 
+  const prevDeckIdx = s.currentIndex > 0 ? s.deck[s.currentIndex - 1] : undefined;
+  const prevRow = prevDeckIdx !== undefined ? forgeProject.data[prevDeckIdx] : null;
+
   const canAdvance = s.currentIndex + 1 < s.deck.length;
 
   return (
     <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100 select-none overflow-hidden">
+      <style>{`@keyframes dftq-slide-out{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}`}</style>
       {!isSpectator && (
         <button
           onClick={handleXCard}
@@ -310,12 +329,50 @@ export function DftQBoard({
         </button>
       )}
 
-      <div className="flex-1 flex flex-col items-center justify-center overflow-auto py-6 px-4">
+      <div className={clsx(
+        'flex-1 flex flex-col items-center justify-center py-6 px-4',
+        animPhase === 'idle' ? 'overflow-auto' : 'overflow-hidden',
+      )}>
         {viewOffset < 0 && (
           <p className="text-xs text-zinc-600 mb-2 tracking-wide">Viewing previous card</p>
         )}
         {deckCardType && displayRow ? (
-          <div className={clsx('transition-opacity duration-150', cardVisible ? 'opacity-100' : 'opacity-0')}>
+          animPhase === 'sliding' && prevRow ? (
+            <div style={{ animation: 'dftq-slide-out 300ms ease-in forwards' }}>
+              <ScaledCard cardType={deckCardType}>
+                <div className="rounded-2xl overflow-hidden shadow-2xl shadow-black/80 ring-1 ring-white/5">
+                  <CardRenderer
+                    project={forgeProject}
+                    cardTypeId={deckCardType.id}
+                    row={prevRow}
+                  />
+                </div>
+              </ScaledCard>
+            </div>
+          ) : animPhase === 'showing-back' || animPhase === 'flipping' ? (
+            <ScaledCard cardType={deckCardType}>
+              <FlippableCard
+                front={
+                  <div className="rounded-2xl overflow-hidden shadow-2xl shadow-black/80 ring-1 ring-white/5">
+                    <CardRenderer
+                      project={forgeProject}
+                      cardTypeId={deckCardType.id}
+                      row={displayRow}
+                    />
+                  </div>
+                }
+                back={
+                  <div className="rounded-2xl overflow-hidden shadow-2xl shadow-black/80 ring-1 ring-white/5">
+                    <CardBack
+                      forgeProject={forgeProject}
+                      cardTypeId={deckCardType.id}
+                    />
+                  </div>
+                }
+                flipped={animPhase === 'showing-back'}
+              />
+            </ScaledCard>
+          ) : (
             <ScaledCard cardType={deckCardType}>
               <div className="rounded-2xl overflow-hidden shadow-2xl shadow-black/80 ring-1 ring-white/5">
                 <CardRenderer
@@ -325,7 +382,7 @@ export function DftQBoard({
                 />
               </div>
             </ScaledCard>
-          </div>
+          )
         ) : (
           <div className="text-zinc-700 text-sm">Loading…</div>
         )}
@@ -382,7 +439,7 @@ export function DftQBoard({
               </span>
             );
           })}
-          {s.currentIndex > 0 && viewOffset === 0 && !isSpectator && (
+          {s.currentIndex > 0 && viewOffset === 0 && !isSpectator && animPhase === 'idle' && (
             <button
               onClick={() => setViewOffset(-1)}
               className="text-xs text-zinc-500 hover:text-zinc-300 px-2 py-1 rounded transition-colors"
@@ -402,17 +459,20 @@ export function DftQBoard({
 
         {canAdvance && !isSpectator && (
           <button
-            onClick={() => onAction({ type: 'next', playerId })}
-            disabled={viewOffset < 0}
+            onClick={() => {
+              pendingNextRef.current = true;
+              onAction({ type: 'next', playerId });
+            }}
+            disabled={viewOffset < 0 || animPhase !== 'idle'}
             className={clsx(
               'ml-4 shrink-0 flex items-center gap-1.5 px-5 py-2.5 min-h-11 rounded-full border text-sm font-medium transition-colors',
-              viewOffset < 0
+              viewOffset < 0 || animPhase !== 'idle'
                 ? 'bg-zinc-800/50 text-zinc-600 border-zinc-800 cursor-not-allowed'
                 : 'bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-zinc-200 border-zinc-700'
             )}
           >
             <span>Next</span>
-            <span className={clsx(viewOffset < 0 ? 'text-zinc-700' : 'text-zinc-400')}>→</span>
+            <span className={clsx(viewOffset < 0 || animPhase !== 'idle' ? 'text-zinc-700' : 'text-zinc-400')}>→</span>
           </button>
         )}
 
