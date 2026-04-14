@@ -2,20 +2,12 @@ import { NextResponse } from 'next/server';
 import { access } from 'fs/promises';
 import { join, basename } from 'path';
 import { createClient } from '@/lib/supabase/server';
-import { createRoom, hasRoom } from '@/lib/room/store';
+import { createRoom, getAllRoomCodes } from '@/lib/room/store';
+import { generateRoomCode } from '@/lib/room/words';
 import type { ForgeGameConfig } from '@/lib/forge/types';
 
 const FORGE_DIR = '/data/forge-files';
 const ADMIN_IDS = (process.env.VTT_ADMIN_USER_IDS ?? '').split(',').filter(Boolean);
-
-function generateRoomCode(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = '';
-  for (let i = 0; i < 6; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return code;
-}
 
 export async function POST(request: Request): Promise<NextResponse> {
   const supabase = await createClient();
@@ -53,17 +45,10 @@ export async function POST(request: Request): Promise<NextResponse> {
   const basePath = process.env.NEXT_PUBLIC_BASEPATH || '';
   const forgeFileUrl = `${basePath}/api/forge-files/${encodeURIComponent(safeName)}`;
 
-  let code = generateRoomCode();
-  let attempts = 0;
-  const MAX_ATTEMPTS = 5;
-
-  while (attempts < MAX_ATTEMPTS) {
-    if (!hasRoom(code)) break;
-    code = generateRoomCode();
-    attempts++;
-  }
-
-  if (attempts >= MAX_ATTEMPTS) {
+  let code: string;
+  try {
+    code = generateRoomCode(getAllRoomCodes());
+  } catch {
     return NextResponse.json({ error: 'Could not generate unique room code' }, { status: 500 });
   }
 
@@ -91,6 +76,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         avatarUrl,
         joinedAt: new Date().toISOString(),
         role: 'player',
+        lastSeenAt: new Date().toISOString(),
       },
     ],
     createdAt: new Date().toISOString(),

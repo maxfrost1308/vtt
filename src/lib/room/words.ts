@@ -1,0 +1,148 @@
+export const ADJECTIVES: string[] = [
+  'able', 'bold', 'brave', 'brief', 'bright',
+  'calm', 'clean', 'clear', 'clever', 'close',
+  'cool', 'crisp', 'cute', 'damp', 'dark',
+  'dear', 'deep', 'dim', 'dry', 'dull',
+  'eager', 'early', 'easy', 'even', 'fair',
+  'fancy', 'fast', 'fine', 'firm', 'flat',
+  'fond', 'free', 'fresh', 'full', 'gentle',
+  'glad', 'golden', 'good', 'grand', 'grave',
+  'great', 'green', 'grey', 'grim', 'happy',
+  'hard', 'harsh', 'heavy', 'high', 'hollow',
+  'honest', 'hot', 'huge', 'humble', 'hushed',
+  'icy', 'idle', 'inner', 'iron', 'jade',
+  'jolly', 'just', 'keen', 'kind', 'known',
+  'large', 'last', 'late', 'lazy', 'lean',
+  'light', 'little', 'live', 'lone', 'long',
+  'lost', 'loud', 'low', 'loyal', 'lucky',
+  'mad', 'main', 'meek', 'merry', 'mild',
+  'misty', 'moist', 'moody', 'muddy', 'mute',
+  'narrow', 'neat', 'new', 'next', 'nice',
+  'noble', 'numb', 'odd', 'old', 'open',
+  'pale', 'past', 'plain', 'plump', 'polite',
+  'poor', 'pretty', 'prime', 'prompt', 'proper',
+  'proud', 'pure', 'quick', 'quiet', 'rare',
+  'raw', 'ready', 'real', 'rich', 'right',
+  'rigid', 'ripe', 'rosy', 'rough', 'round',
+  'royal', 'rude', 'rustic', 'safe', 'salty',
+  'same', 'secret', 'sharp', 'shy', 'silent',
+  'silly', 'simple', 'sleek', 'slim', 'slow',
+  'small', 'smart', 'smooth', 'snug', 'soft',
+  'solid', 'sour', 'spare', 'stark', 'steady',
+  'steep', 'stiff', 'still', 'stout', 'strong',
+  'sunny', 'super', 'sure', 'sweet', 'swift',
+  'tall', 'tame', 'tart', 'tender', 'thick',
+  'thin', 'tidy', 'tight', 'tiny', 'tired',
+  'tough', 'trim', 'true', 'ugly', 'upper',
+  'urgent', 'usual', 'vague', 'vain', 'vast',
+  'vivid', 'warm', 'weak', 'weary', 'wet',
+  'whole', 'wide', 'wild', 'wise', 'witty',
+  'worn', 'worthy', 'young', 'zealous', 'zippy',
+  'azure', 'roving', 'dusty', 'frosty', 'stormy',
+];
+
+export const NOUNS: string[] = [
+  'ant', 'ape', 'ark', 'badge', 'barn',
+  'bass', 'bat', 'bay', 'bear', 'bee',
+  'bell', 'bird', 'bloom', 'boat', 'bolt',
+  'bone', 'book', 'bow', 'box', 'brook',
+  'bud', 'bug', 'bush', 'cape', 'cave',
+  'claw', 'clay', 'cliff', 'cloud', 'clover',
+  'coal', 'coast', 'coin', 'colt', 'comb',
+  'cone', 'coral', 'cork', 'corn', 'cove',
+  'crab', 'crane', 'creek', 'crew', 'crest',
+  'crow', 'crown', 'cube', 'cup', 'dawn',
+  'deer', 'den', 'dew', 'dock', 'dome',
+  'dove', 'drum', 'duck', 'dune', 'dust',
+  'eagle', 'elm', 'ember', 'fawn', 'fern',
+  'finch', 'fish', 'flag', 'flame', 'flask',
+  'flint', 'flock', 'flute', 'foam', 'fog',
+  'forge', 'fort', 'fox', 'frog', 'frost',
+  'gale', 'gate', 'gem', 'glen', 'goat',
+  'goose', 'grape', 'grove', 'gull', 'hare',
+  'harp', 'hawk', 'hazel', 'hedge', 'heron',
+  'hill', 'hive', 'horn', 'horse', 'hound',
+  'hull', 'iris', 'ivy', 'jade', 'jay',
+  'kite', 'knoll', 'lake', 'lark', 'leaf',
+  'lily', 'lion', 'lodge', 'loom', 'lynx',
+  'maple', 'marsh', 'mask', 'mast', 'mill',
+  'mint', 'mole', 'moon', 'moose', 'moss',
+  'moth', 'mound', 'mouse', 'nest', 'newt',
+  'oak', 'oar', 'olive', 'orca', 'orchid',
+  'otter', 'owl', 'oxen', 'palm', 'panda',
+  'path', 'peak', 'pearl', 'petal', 'pine',
+  'plum', 'pond', 'pony', 'pool', 'quail',
+  'raven', 'reed', 'reef', 'ridge', 'ring',
+  'river', 'robin', 'rock', 'root', 'rose',
+  'sage', 'sail', 'seal', 'seed', 'shade',
+  'shell', 'shore', 'silk', 'slope', 'snail',
+  'snake', 'snow', 'spark', 'spire', 'spruce',
+  'stag', 'star', 'stone', 'stork', 'storm',
+  'swan', 'thorn', 'tide', 'tiger', 'toad',
+  'torch', 'trail', 'tree', 'trout', 'tulip',
+  'vale', 'vine', 'viper', 'wand', 'wasp',
+  'wave', 'whale', 'wheat', 'wolf', 'wren',
+];
+
+export const DESCRIPTORS: string[] = [
+  'abyss', 'arc', 'aura', 'beam', 'blaze',
+  'bliss', 'bloom', 'bolt', 'bond', 'break',
+  'breeze', 'brink', 'burst', 'call', 'calm',
+  'chant', 'charm', 'chase', 'chime', 'chord',
+  'clash', 'climb', 'crest', 'cross', 'crush',
+  'cry', 'curve', 'dance', 'dare', 'dash',
+  'dawn', 'depth', 'dew', 'dive', 'draft',
+  'dream', 'drift', 'drive', 'drop', 'dusk',
+  'dust', 'echo', 'edge', 'ember', 'epoch',
+  'eve', 'fall', 'fate', 'feast', 'fire',
+  'flash', 'flight', 'float', 'flood', 'flow',
+  'flux', 'foam', 'force', 'forge', 'form',
+  'frost', 'fury', 'gale', 'gaze', 'gleam',
+  'glide', 'glow', 'grace', 'grasp', 'grove',
+  'growl', 'guard', 'guest', 'guide', 'gust',
+  'haste', 'haven', 'haze', 'heart', 'heat',
+  'hike', 'hope', 'howl', 'hush', 'hymn',
+  'isle', 'jade', 'jest', 'jewel', 'jolt',
+  'joy', 'keen', 'knack', 'knot', 'lapse',
+  'laugh', 'leap', 'light', 'lore', 'lull',
+  'lunar', 'lure', 'march', 'mark', 'marsh',
+  'mend', 'mirth', 'mist', 'mood', 'myth',
+  'night', 'north', 'note', 'oath', 'orbit',
+  'pace', 'pact', 'path', 'pause', 'peace',
+  'peak', 'phase', 'pixel', 'plume', 'plunge',
+  'polar', 'prime', 'prism', 'psalm', 'pulse',
+  'purge', 'quest', 'rain', 'realm', 'reign',
+  'ridge', 'rift', 'rise', 'roam', 'roar',
+  'rune', 'rush', 'saga', 'salt', 'shade',
+  'shift', 'sight', 'sign', 'siren', 'skald',
+  'skill', 'sky', 'sleep', 'slope', 'smelt',
+  'soar', 'solar', 'song', 'south', 'spark',
+  'spell', 'spire', 'spray', 'spring', 'spur',
+  'stand', 'steam', 'step', 'storm', 'surge',
+  'sweep', 'tales', 'tempo', 'thaw', 'thorn',
+  'thrum', 'toast', 'token', 'torch', 'trace',
+  'trade', 'trail', 'trend', 'trial', 'truce',
+  'trust', 'truth', 'tune', 'twist', 'vale',
+  'vault', 'verge', 'verse', 'vigor', 'voice',
+  'vow', 'wake', 'wane', 'watch', 'whirl',
+];
+
+/**
+ * Generate a memorable 3-word room code like "brave-panda-sunset".
+ * Picks one word from each list at random, joined by hyphens.
+ * Retries if the code already exists in `existingCodes`.
+ */
+export function generateRoomCode(existingCodes: Set<string>): string {
+  const maxAttempts = 100;
+  for (let i = 0; i < maxAttempts; i++) {
+    const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
+    const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
+    const desc = DESCRIPTORS[Math.floor(Math.random() * DESCRIPTORS.length)];
+    const code = `${adj}-${noun}-${desc}`;
+    if (!existingCodes.has(code)) {
+      return code;
+    }
+  }
+  // Extremely unlikely with 200^3 = 8M combinations
+  throw new Error('Could not generate unique room code after 100 attempts');
+}

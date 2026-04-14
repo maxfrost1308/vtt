@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getRoom } from '@/lib/room/store';
+import { getRoom, updatePlayerHeartbeat, getPlayerOnlineStatus } from '@/lib/room/store';
 
 export async function GET(
   _request: Request,
@@ -17,10 +17,20 @@ export async function GET(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const room = getRoom(code.toUpperCase());
+  const room = getRoom(code.toLowerCase());
   if (!room) {
     return NextResponse.json({ error: 'Room not found' }, { status: 404 });
   }
 
-  return NextResponse.json({ room });
+  updatePlayerHeartbeat(code.toLowerCase(), user.id);
+
+  const roomWithOnlineStatus = {
+    ...room,
+    players: room.players.map((p) => ({
+      ...p,
+      isOnline: getPlayerOnlineStatus(p),
+    })),
+  };
+
+  return NextResponse.json({ room: roomWithOnlineStatus });
 }

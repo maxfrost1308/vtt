@@ -17,7 +17,7 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const room = getRoom(code.toUpperCase());
+  const room = getRoom(code.toLowerCase());
   if (!room) {
     return NextResponse.json({ error: 'Room not found' }, { status: 404 });
   }
@@ -39,14 +39,15 @@ export async function POST(
     // No body or invalid JSON — default to player
   }
 
-  addPlayer(code.toUpperCase(), {
+  addPlayer(code.toLowerCase(), {
     userId: user.id,
     displayName,
     avatarUrl,
     joinedAt: new Date().toISOString(),
     role: spectator ? 'spectator' : 'player',
+    lastSeenAt: new Date().toISOString(),
   });
 
-  const updatedRoom = getRoom(code.toUpperCase());
+  const updatedRoom = getRoom(code.toLowerCase());
   return NextResponse.json({ room: updatedRoom });
 }

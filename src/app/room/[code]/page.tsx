@@ -21,7 +21,7 @@ export default async function RoomPage({ params }: RoomPageProps) {
     redirect(`${basePath}/`);
   }
 
-  const room = getRoom(code.toUpperCase());
+  const room = getRoom(code.toLowerCase());
   if (!room) {
     notFound();
   }
@@ -35,7 +35,7 @@ export default async function RoomPage({ params }: RoomPageProps) {
   const avatarUrl: string | null =
     (user.user_metadata?.['avatar_url'] as string | undefined) ?? null;
 
-  addPlayer(code.toUpperCase(), {
+  addPlayer(code.toLowerCase(), {
     userId: user.id,
     displayName,
     avatarUrl,
@@ -43,7 +43,7 @@ export default async function RoomPage({ params }: RoomPageProps) {
     role: 'player',
   });
 
-  const freshRoom = getRoom(code.toUpperCase())!;
+  const freshRoom = getRoom(code.toLowerCase())!;
 
   return (
     <GameBoard

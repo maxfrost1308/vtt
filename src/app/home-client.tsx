@@ -42,6 +42,7 @@ export function HomeClient({ user }: HomeClientProps) {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const [joinCode, setJoinCode] = useState('');
+  const [joinError, setJoinError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
@@ -208,8 +209,14 @@ export function HomeClient({ user }: HomeClientProps) {
 
   const handleJoinRoom = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!joinCode.trim()) return;
-    window.location.href = `${basePath}/room/${joinCode.trim().toUpperCase()}`;
+    setJoinError(null);
+    
+    if (!joinCode.trim()) {
+      setJoinError('Please enter a room code');
+      return;
+    }
+    
+    window.location.href = `${basePath}/room/${joinCode.trim().toLowerCase()}`;
   };
 
   if (!user) {
@@ -466,22 +473,29 @@ export function HomeClient({ user }: HomeClientProps) {
 
         <section className="flex flex-col gap-4 p-6 bg-zinc-800 rounded-2xl border border-zinc-700">
           <h2 className="text-xl font-semibold text-zinc-100">Join a Room</h2>
-          <form onSubmit={handleJoinRoom} className="flex gap-3">
-            <input
-              type="text"
-              value={joinCode}
-              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              placeholder="Enter room code"
-              maxLength={8}
-              className="flex-1 px-4 py-2.5 bg-zinc-700 border border-zinc-600 rounded-full text-zinc-100 placeholder-zinc-500 font-mono tracking-widest text-lg focus:outline-none focus:border-zinc-400 transition-colors"
-            />
-            <button
-              type="submit"
-              disabled={!joinCode.trim()}
-              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-full transition-colors"
-            >
-              Join
-            </button>
+          <form onSubmit={handleJoinRoom} className="flex flex-col gap-3">
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value.toLowerCase())}
+                placeholder="brave-panda-sunset"
+                maxLength={30}
+                className="flex-1 px-4 py-2.5 bg-zinc-700 border border-zinc-600 rounded-full text-zinc-100 placeholder-zinc-500 font-mono tracking-wide text-base focus:outline-none focus:border-zinc-400 transition-colors"
+              />
+              <button
+                type="submit"
+                disabled={!joinCode.trim()}
+                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-full transition-colors"
+              >
+                Join
+              </button>
+            </div>
+            {joinError && (
+              <p className="text-sm text-red-400 bg-red-900/20 border border-red-800 rounded-lg px-3 py-2">
+                {joinError}
+              </p>
+            )}
           </form>
         </section>
       </main>

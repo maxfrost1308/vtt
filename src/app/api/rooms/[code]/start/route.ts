@@ -23,7 +23,7 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const room = getRoom(code.toUpperCase());
+  const room = getRoom(code.toLowerCase());
   if (!room) {
     return NextResponse.json({ error: 'Room not found' }, { status: 404 });
   }
@@ -84,8 +84,8 @@ export async function POST(
   const initialState = framework.createInitialState(forgeProject, gameConfigWithTimer, playerIds);
   const playingState = { ...initialState, phase: 'playing' as const };
 
-  updateGameState(code.toUpperCase(), playingState, 'playing');
+  updateGameState(code.toLowerCase(), playingState, 'playing');
 
-  const updatedRoom = getRoom(code.toUpperCase());
+  const updatedRoom = getRoom(code.toLowerCase());
   return NextResponse.json({ room: updatedRoom });
 }
