@@ -1,7 +1,15 @@
 'use client';
 
+import clsx from 'clsx';
 import type { PlayerInfo } from '@/lib/frameworks/types';
 import { PlayerList } from './player-list';
+
+const TIMER_OPTIONS: { label: string; value: number | null }[] = [
+  { label: '60 min', value: 60 * 60 * 1000 },
+  { label: '90 min', value: 90 * 60 * 1000 },
+  { label: '120 min', value: 120 * 60 * 1000 },
+  { label: 'None', value: null },
+];
 
 interface LobbyProps {
   roomCode: string;
@@ -13,6 +21,8 @@ interface LobbyProps {
   isStarting: boolean;
   isLoadingForge: boolean;
   startError: string | null;
+  selectedTimer: number | null;
+  onTimerChange: (ms: number | null) => void;
 }
 
 export function Lobby({
@@ -25,6 +35,8 @@ export function Lobby({
   isStarting,
   isLoadingForge,
   startError,
+  selectedTimer,
+  onTimerChange,
 }: LobbyProps) {
   const isHost = currentUserId === hostId;
 
@@ -57,6 +69,28 @@ export function Lobby({
           </p>
           <PlayerList players={players} hostId={hostId} />
         </div>
+
+        {isHost && (
+          <div>
+            <p className="text-sm font-medium text-zinc-400 mb-2">Session Timer</p>
+            <div className="flex gap-1.5">
+              {TIMER_OPTIONS.map((opt) => (
+                <button
+                  key={opt.label}
+                  onClick={() => onTimerChange(opt.value)}
+                  className={clsx(
+                    'px-3 py-1.5 text-xs font-medium rounded-full border transition-colors',
+                    selectedTimer === opt.value
+                      ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                      : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700'
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {isHost ? (
           <div className="flex flex-col gap-2">

@@ -32,6 +32,7 @@ export function GameBoard({
   const [isStarting, setIsStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [timerDurationMs, setTimerDurationMs] = useState<number | null>(null);
   const versionRef = useRef<number>(
     (initialRoom.gameState as GameState | null)?.version ?? -1
   );
@@ -96,6 +97,8 @@ export function GameBoard({
     try {
       const res = await fetch(`${basePath}/api/rooms/${room.code}/start`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ timerDurationMs }),
       });
       if (!res.ok) {
         const data = (await res.json()) as { error?: string };
@@ -160,6 +163,8 @@ export function GameBoard({
         isStarting={isStarting}
         isLoadingForge={!forgeProject}
         startError={startError}
+        selectedTimer={timerDurationMs}
+        onTimerChange={setTimerDurationMs}
       />
     );
   }

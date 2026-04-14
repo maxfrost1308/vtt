@@ -1,5 +1,6 @@
 import { deserializeProject } from 'forge';
 import type { ForgeProject } from 'forge';
+import { unzipSync } from 'fflate';
 import type { ForgeGameConfig } from './types';
 
 export interface LoadedForgeFile {
@@ -8,11 +9,28 @@ export interface LoadedForgeFile {
 }
 
 export async function loadForgeFile(data: ArrayBuffer): Promise<LoadedForgeFile> {
+  const zipConfig = extractGameConfigFromZip(data);
+
   const project = await deserializeProject(data);
 
-  const gameConfig = extractGameConfig(project);
+  const gameConfig = zipConfig ?? extractGameConfig(project);
 
   return { project, gameConfig };
+}
+
+export function extractGameConfigFromZip(data: ArrayBuffer | Uint8Array): ForgeGameConfig | null {
+  try {
+    const uint8 = data instanceof Uint8Array ? data : new Uint8Array(data);
+    const files = unzipSync(uint8);
+    const gameJsonBytes = files['game.json'];
+    if (!gameJsonBytes) return null;
+    const text = new TextDecoder().decode(gameJsonBytes);
+    const parsed: unknown = JSON.parse(text);
+    if (isForgeGameConfig(parsed)) return parsed;
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 function extractGameConfig(project: ForgeProject): ForgeGameConfig {

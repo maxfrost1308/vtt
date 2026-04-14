@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import clsx from 'clsx';
-import type { BoardProps, PlayerInfo } from '@/lib/frameworks/types';
+import type { BoardProps, PlayerInfo, GameAction } from '@/lib/frameworks/types';
 import type { DftQState } from './index';
 import { CardRenderer } from '@/components/card-renderer';
 
@@ -57,6 +57,13 @@ function ScaledCard({
   );
 }
 
+function formatTime(ms: number): string {
+  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+}
+
 export function DftQBoard({
   state,
   playerId,
@@ -69,6 +76,9 @@ export function DftQBoard({
   const [showXOverlay, setShowXOverlay] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [cardVisible, setCardVisible] = useState(true);
+  const [noteInput, setNoteInput] = useState('');
+  const [storyCopied, setStoryCopied] = useState(false);
+  const [remainingMs, setRemainingMs] = useState<number | null>(null);
 
   const isHost = players.find((p) => p.id === playerId)?.isHost ?? false;
   const deckTypeId = gameConfig.roles['deck'];
@@ -97,6 +107,24 @@ export function DftQBoard({
     const timer = setTimeout(() => setCardVisible(true), 150);
     return () => clearTimeout(timer);
   }, [s.currentIndex]);
+
+  useEffect(() => {
+    setNoteInput('');
+  }, [s.currentIndex]);
+
+  useEffect(() => {
+    if (!s.timerDurationMs || !s.timerStartedAt) {
+      setRemainingMs(null);
+      return;
+    }
+    const compute = () => {
+      const end = new Date(s.timerStartedAt!).getTime() + s.timerDurationMs!;
+      setRemainingMs(end - Date.now());
+    };
+    compute();
+    const id = setInterval(compute, 1000);
+    return () => clearInterval(id);
+  }, [s.timerDurationMs, s.timerStartedAt]);
 
   if (s.dftqPhase === 'intro') {
     const creatorRow = forgeProject.data[s.chosenCreator];
@@ -188,6 +216,39 @@ export function DftQBoard({
           <p className="text-zinc-400 text-sm">What was your favorite moment?</p>
         </div>
 
+        {s.storyLog.filter((e) => e.note.trim()).length > 0 && (
+          <div className="w-full max-w-md space-y-3">
+            <p className="text-xs uppercase tracking-widest text-zinc-500 font-medium text-center">
+              Your Story
+            </p>
+            <ul className="space-y-1.5 text-sm text-zinc-300">
+              {s.storyLog
+                .filter((e) => e.note.trim())
+                .map((e, i) => (
+                  <li key={i} className="flex gap-2">
+                    <span className="text-zinc-600 shrink-0">•</span>
+                    <span>{e.note}</span>
+                  </li>
+                ))}
+            </ul>
+            <div className="flex justify-center">
+              <button
+                onClick={() => {
+                  const entries = s.storyLog.filter((e) => e.note.trim());
+                  const text = `${forgeProject.name}\n\n${entries.map((e) => `• ${e.note}`).join('\n')}`;
+                  navigator.clipboard.writeText(text).then(() => {
+                    setStoryCopied(true);
+                    setTimeout(() => setStoryCopied(false), 2000);
+                  });
+                }}
+                className="px-5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-full border border-zinc-700 text-sm transition-colors"
+              >
+                {storyCopied ? 'Copied!' : 'Copy story'}
+              </button>
+            </div>
+          </div>
+        )}
+
         <p className="text-zinc-600 text-sm font-medium">{forgeProject.name}</p>
 
         <a
@@ -235,6 +296,31 @@ export function DftQBoard({
         )}
       </div>
 
+      <div className="px-4 pb-2">
+        <input
+          type="text"
+          value={noteInput}
+          onChange={(e) => setNoteInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && noteInput.trim()) {
+              const a = { type: 'add-note', playerId, note: noteInput.trim(), cardIndex: s.currentIndex };
+              onAction(a as GameAction);
+              setNoteInput('');
+            }
+          }}
+          onBlur={() => {
+            if (noteInput.trim()) {
+              const a = { type: 'add-note', playerId, note: noteInput.trim(), cardIndex: s.currentIndex };
+              onAction(a as GameAction);
+              setNoteInput('');
+            }
+          }}
+          placeholder="What happened? (optional)"
+          className="w-full bg-transparent border-b border-zinc-700 focus:border-zinc-500 outline-none text-sm text-zinc-300 placeholder-zinc-600 py-1.5 transition-colors"
+          maxLength={200}
+        />
+      </div>
+
       <div className="shrink-0 flex items-center gap-0 px-4 py-3 border-t border-zinc-800/60 bg-zinc-900/80 backdrop-blur">
         <div className="flex-1 flex flex-wrap gap-x-2 gap-y-0.5 text-sm overflow-hidden">
           {orderedPlayers.map((p, i) => {
@@ -264,6 +350,15 @@ export function DftQBoard({
             <span>Next</span>
             <span className="text-zinc-400">→</span>
           </button>
+        )}
+
+        {s.timerDurationMs && s.timerStartedAt && remainingMs !== null && (
+          <span className={clsx(
+            'ml-3 text-xs font-mono tabular-nums shrink-0',
+            remainingMs <= 0 ? 'text-rose-400' : remainingMs <= 10 * 60 * 1000 ? 'text-amber-400 animate-pulse' : 'text-zinc-500'
+          )}>
+            {remainingMs <= 0 ? "Time\u2019s up" : formatTime(remainingMs)}
+          </span>
         )}
       </div>
 

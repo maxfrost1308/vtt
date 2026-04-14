@@ -9,7 +9,7 @@ import { deserializeProject } from 'forge';
 const FORGE_DIR = '/data/forge-files';
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ code: string }> }
 ): Promise<NextResponse> {
   const { code } = await params;
@@ -65,8 +65,23 @@ export async function POST(
     return NextResponse.json({ error: validation.errors.join('. ') }, { status: 400 });
   }
 
+  let timerDurationMs: number | null = null;
+  try {
+    const body = (await request.json()) as { timerDurationMs?: number | null };
+    if (typeof body.timerDurationMs === 'number' && body.timerDurationMs > 0) {
+      timerDurationMs = body.timerDurationMs;
+    }
+  } catch {
+    // No body or invalid JSON — timer stays null
+  }
+
+  const gameConfigWithTimer = {
+    ...room.gameConfig,
+    config: { ...room.gameConfig.config, timerDurationMs },
+  };
+
   const playerIds = room.players.map((p) => p.userId);
-  const initialState = framework.createInitialState(forgeProject, room.gameConfig, playerIds);
+  const initialState = framework.createInitialState(forgeProject, gameConfigWithTimer, playerIds);
   const playingState = { ...initialState, phase: 'playing' as const };
 
   updateGameState(code.toUpperCase(), playingState, 'playing');

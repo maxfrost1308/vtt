@@ -121,3 +121,30 @@ Matched DftQ board exactly:
 - Total transition time: 150ms fade-out + 150ms fade-in = 300ms total
 - No layout shift during fade (wrapper maintains dimensions via ScaledCard's sizing)
 - Build: ✓ passed with zero errors, no LSP diagnostics
+
+## [2026-04-14] Task: room-persistence
+- Rooms now persist to /data/forge-files/rooms/{code}.json
+- Auto-cleanup: rooms older than 24h deleted on startup
+- Sync fs for init loading, async fire-and-forget for mutations
+- Graceful fallback: warns if rooms dir unavailable, continues without crash
+
+## [2026-04-14] Task: forge-format-extension
+- .forge files can now contain game.json for self-configuration
+- fflate added for ZIP extraction
+- selfConfigured field added to ForgeFileEntry
+- extractGameConfigFromZip exported from loader.ts for reuse in route.ts
+- Backward compatible: falls back to sidecar .json then generic config
+
+## [2026-04-14] Task: story-log
+- Story log added to DftQ: add-note action, storyLog in state, recap on ended screen
+- GameAction type is strict (type, playerId, payload?) — extra props need variable + `as GameAction` cast to bypass excess property checking
+- Object literal excess property checking applies even with `as Type` assertions in inline function args
+
+## [2026-04-14] Task: session-timer
+- Timer added to DftQ: timerDurationMs + timerStartedAt in state, countdown in playing phase
+
+## [2026-04-14] Task: the-wandering-framework
+- New framework "The Wandering" added: journey-based, anyone can advance, no X-Card
+- Pattern: mirrors generic-card-draw exactly — slot `cards`, actions `begin`/`next`, phases `intro`/`playing`/`ended`
+- Slot name `cards` (not `deck`) — validate/createInitialState use `config.roles['cards']`
+- Board UI reuses same dark zinc palette, amber Begin button, bottom bar with player dots

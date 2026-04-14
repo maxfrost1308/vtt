@@ -234,7 +234,7 @@ Wave 4 (Longer term — parallel):
 
 ---
 
-- [ ] 10. Story log
+- [x] 10. Story log
 
   **What to do**:
   - After each prompt card, show an optional text input: "What happened?" (1 line)
@@ -247,7 +247,7 @@ Wave 4 (Longer term — parallel):
 
 ---
 
-- [ ] 11. Session timer
+- [x] 11. Session timer
 
   **What to do**:
   - Host sets timer when starting (60/90/120 min or custom, or no timer)
@@ -260,7 +260,7 @@ Wave 4 (Longer term — parallel):
 
 ---
 
-- [ ] 12. Room persistence
+- [x] 12. Room persistence
 
   **What to do**:
   - On every state change, write room state to /data/forge-files/rooms/{code}.json
@@ -274,7 +274,7 @@ Wave 4 (Longer term — parallel):
 
 ---
 
-- [ ] 13. Forge format extension
+- [x] 13. Forge format extension
 
   **What to do**:
   - Add optional game.json inside .forge ZIP: { framework: "descended-from-queen", config: {...} }
@@ -287,7 +287,7 @@ Wave 4 (Longer term — parallel):
 
 ---
 
-- [ ] 14. Build next game framework
+- [x] 14. Build next game framework
 
   **What to do**:
   - Research another storytelling game system (The Quiet Year, Fiasco, Star Crossed)

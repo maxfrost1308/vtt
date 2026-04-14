@@ -21,15 +21,18 @@ export interface DftQState extends GameState {
   endIndex: number;
   xCardIndices: number[];
   instructionIndices: number[];
+  storyLog: Array<{ cardIndex: number; note: string; author: string }>;
+  timerDurationMs: number | null;
+  timerStartedAt: string | null;
 }
 
-type DftQActionType = 'begin' | 'next' | 'x-card';
+type DftQActionType = 'begin' | 'next' | 'x-card' | 'add-note';
 
 interface DftQAction extends GameAction {
   type: DftQActionType;
 }
 
-const DFTQ_ACTIONS = new Set<string>(['begin', 'next', 'x-card']);
+const DFTQ_ACTIONS = new Set<string>(['begin', 'next', 'x-card', 'add-note']);
 
 function isDftQAction(action: GameAction): action is DftQAction {
   return DFTQ_ACTIONS.has(action.type);
@@ -210,6 +213,8 @@ export const descendedFromQueenFramework: GameFramework = {
 
     const deck = [...sortedInstructions, ...promptsWithEnd];
 
+    const timerDurationMs = (config.config?.['timerDurationMs'] as number | null) ?? null;
+
     return {
       phase: 'playing',
       turnIndex: 0,
@@ -222,6 +227,9 @@ export const descendedFromQueenFramework: GameFramework = {
       endIndex,
       xCardIndices,
       instructionIndices,
+      storyLog: [],
+      timerDurationMs,
+      timerStartedAt: null,
     };
   },
 
@@ -232,7 +240,13 @@ export const descendedFromQueenFramework: GameFramework = {
     switch (action.type) {
       case 'begin': {
         if (s.dftqPhase !== 'intro') return null;
-        return { ...s, version: s.version + 1, dftqPhase: 'playing', currentIndex: 0 };
+        return {
+          ...s,
+          version: s.version + 1,
+          dftqPhase: 'playing',
+          currentIndex: 0,
+          timerStartedAt: s.timerDurationMs ? new Date().toISOString() : null,
+        };
       }
 
       case 'next':
@@ -249,6 +263,21 @@ export const descendedFromQueenFramework: GameFramework = {
           turnIndex: (s.turnIndex + 1) % s.playerOrder.length,
           dftqPhase: isEnd ? 'ended' : 'playing',
         };
+      }
+
+      case 'add-note': {
+        if (s.dftqPhase !== 'playing') return null;
+        const note = (action as { note?: string }).note ?? '';
+        const cardIndex = (action as { cardIndex?: number }).cardIndex ?? s.currentIndex;
+        if (!note.trim()) return null;
+        const existing = s.storyLog.findIndex((e) => e.cardIndex === cardIndex);
+        const newLog = [...s.storyLog];
+        if (existing >= 0) {
+          newLog[existing] = { cardIndex, note: note.trim(), author: action.playerId };
+        } else {
+          newLog.push({ cardIndex, note: note.trim(), author: action.playerId });
+        }
+        return { ...s, version: s.version + 1, storyLog: newLog };
       }
     }
 
