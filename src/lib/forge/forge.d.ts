@@ -34,6 +34,7 @@ declare module 'forge' {
     data: string;
     type?: string;
     size?: number;
+    family?: string;
   }
 
   export interface ForgeProject {

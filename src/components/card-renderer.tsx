@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { renderCard, scopeCss, preprocessCssAssets } from 'forge';
-import type { ForgeProject, ForgeRow } from 'forge';
+import type { ForgeProject, ForgeAsset, ForgeRow } from 'forge';
 
 interface CardRendererProps {
   project: ForgeProject;
@@ -16,11 +16,25 @@ interface CardBackProps {
 }
 
 function buildGetAsset(project: ForgeProject) {
-  return (name: string) => project.assets[name] ?? null;
+  return (name: string): ForgeAsset | null =>
+    project.assets[name] ?? project.fonts[name] ?? null;
 }
 
-function buildCss(rawCss: string, cardTypeId: string, getAsset: (name: string) => ReturnType<ReturnType<typeof buildGetAsset>>) {
-  return scopeCss(preprocessCssAssets(rawCss, getAsset), cardTypeId);
+function buildFontFaceCss(project: ForgeProject): string {
+  const entries = Object.values(project.fonts);
+  if (entries.length === 0) return '';
+  return entries
+    .filter((f) => f.family && f.data)
+    .map((f) => `@font-face{font-family:"${f.family}";src:url(${f.data})}`)
+    .join('');
+}
+
+function buildCss(project: ForgeProject, cardTypeId: string, getAsset: ReturnType<typeof buildGetAsset>) {
+  const cardType = project.cardTypes.find((ct) => ct.id === cardTypeId);
+  if (!cardType) return '';
+  const fontCss = buildFontFaceCss(project);
+  const cardCss = scopeCss(preprocessCssAssets(cardType.css, getAsset), cardTypeId);
+  return fontCss + cardCss;
 }
 
 export function CardRenderer({ project, cardTypeId, row }: CardRendererProps) {
@@ -39,8 +53,8 @@ export function CardRenderer({ project, cardTypeId, row }: CardRendererProps) {
       { globalVariables: project.globalVariables, getAsset }
     );
 
-    return { html: renderedHtml, css: buildCss(cardType.css, cardType.id, getAsset) };
-  }, [cardType, row, project]);
+    return { html: renderedHtml, css: buildCss(project, cardTypeId, getAsset) };
+  }, [cardType, row, project, cardTypeId]);
 
   if (!cardType) return null;
 
@@ -73,8 +87,8 @@ export function CardBack({ forgeProject, cardTypeId }: CardBackProps) {
       { globalVariables: forgeProject.globalVariables, getAsset }
     );
 
-    return { html, css: buildCss(cardType.css, cardType.id, getAsset) };
-  }, [cardType, forgeProject]);
+    return { html, css: buildCss(forgeProject, cardTypeId, getAsset) };
+  }, [cardType, forgeProject, cardTypeId]);
 
   if (!cardType) return null;
 
