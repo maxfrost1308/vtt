@@ -29,7 +29,7 @@ export function CardRenderer({ project, cardTypeId, row }: CardRendererProps) {
       style={{ width: rendered.width, height: rendered.height, position: 'relative', overflow: 'hidden' }}
     >
       <style>{rendered.css}</style>
-      <div dangerouslySetInnerHTML={{ __html: rendered.html }} />
+      <div style={{ width: '100%', height: '100%' }} dangerouslySetInnerHTML={{ __html: rendered.html }} />
     </div>
   );
 }
@@ -72,7 +72,7 @@ export function CardBack({ forgeProject, cardTypeId }: CardBackProps) {
       style={{ width: rendered.width, height: rendered.height, position: 'relative', overflow: 'hidden' }}
     >
       <style>{rendered.css}</style>
-      <div dangerouslySetInnerHTML={{ __html: rendered.html }} />
+      <div style={{ width: '100%', height: '100%' }} dangerouslySetInnerHTML={{ __html: rendered.html }} />
     </div>
   );
 }
