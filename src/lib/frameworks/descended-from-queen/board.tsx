@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, type ReactNode } from 'react';
 import clsx from 'clsx';
 import type { BoardProps, PlayerInfo, GameAction } from '@/lib/frameworks/types';
 import type { DftQState } from './index';
-import { CardRenderer } from '@/components/card-renderer';
+import { CardRenderer, CardBack } from '@/components/card-renderer';
 
 /** Convert a CSS dimension (e.g. "63.5mm") to pixels. */
 function parsePx(v: string): number {
@@ -79,6 +79,7 @@ export function DftQBoard({
   const [noteInput, setNoteInput] = useState('');
   const [storyCopied, setStoryCopied] = useState(false);
   const [remainingMs, setRemainingMs] = useState<number | null>(null);
+  const [viewOffset, setViewOffset] = useState(0);
 
   const isHost = players.find((p) => p.id === playerId)?.isHost ?? false;
   const isSpectator = players.find((p) => p.id === playerId)?.isSpectator ?? false;
@@ -114,6 +115,10 @@ export function DftQBoard({
   }, [s.currentIndex]);
 
   useEffect(() => {
+    setViewOffset(0);
+  }, [s.currentIndex]);
+
+  useEffect(() => {
     if (!s.timerDurationMs || !s.timerStartedAt) {
       setRemainingMs(null);
       return;
@@ -128,8 +133,6 @@ export function DftQBoard({
   }, [s.timerDurationMs, s.timerStartedAt]);
 
   if (s.dftqPhase === 'intro') {
-    const creatorRow = forgeProject.data[s.chosenCreator];
-
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-900 text-zinc-100 gap-8 px-6 py-10">
         {!bannerDismissed && (
@@ -146,13 +149,12 @@ export function DftQBoard({
           </div>
         )}
 
-        {deckCardType && creatorRow && (
+        {deckCardType && (
           <ScaledCard cardType={deckCardType}>
             <div className="rounded-2xl overflow-hidden shadow-2xl shadow-black/60 ring-1 ring-white/10">
-              <CardRenderer
-                project={forgeProject}
+              <CardBack
+                forgeProject={forgeProject}
                 cardTypeId={deckCardType.id}
-                row={creatorRow}
               />
             </div>
           </ScaledCard>
@@ -288,9 +290,10 @@ export function DftQBoard({
     );
   }
 
-  const currentCardDataIndex = s.currentIndex >= 0 ? s.deck[s.currentIndex] : undefined;
-  const currentRow =
-    currentCardDataIndex !== undefined ? forgeProject.data[currentCardDataIndex] : null;
+  const displayIndex = Math.max(0, s.currentIndex + viewOffset);
+  const displayCardDataIndex = displayIndex >= 0 ? s.deck[displayIndex] : undefined;
+  const displayRow =
+    displayCardDataIndex !== undefined ? forgeProject.data[displayCardDataIndex] : null;
 
   const canAdvance = s.currentIndex + 1 < s.deck.length;
 
@@ -307,15 +310,18 @@ export function DftQBoard({
         </button>
       )}
 
-      <div className="flex-1 flex items-center justify-center overflow-auto py-6 px-4">
-        {deckCardType && currentRow ? (
+      <div className="flex-1 flex flex-col items-center justify-center overflow-auto py-6 px-4">
+        {viewOffset < 0 && (
+          <p className="text-xs text-zinc-600 mb-2 tracking-wide">Viewing previous card</p>
+        )}
+        {deckCardType && displayRow ? (
           <div className={clsx('transition-opacity duration-150', cardVisible ? 'opacity-100' : 'opacity-0')}>
             <ScaledCard cardType={deckCardType}>
               <div className="rounded-2xl overflow-hidden shadow-2xl shadow-black/80 ring-1 ring-white/5">
                 <CardRenderer
                   project={forgeProject}
                   cardTypeId={deckCardType.id}
-                  row={currentRow}
+                  row={displayRow}
                 />
               </div>
             </ScaledCard>
@@ -364,7 +370,7 @@ export function DftQBoard({
           );
         })()}
         <div className="flex items-center gap-0 px-4 py-3">
-        <div className="flex-1 flex flex-wrap gap-x-2 gap-y-0.5 text-sm overflow-hidden">
+        <div className="flex-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm overflow-hidden">
           {orderedPlayers.map((p, i) => {
             const isMe = p.id === playerId;
             return (
@@ -376,15 +382,37 @@ export function DftQBoard({
               </span>
             );
           })}
+          {s.currentIndex > 0 && viewOffset === 0 && !isSpectator && (
+            <button
+              onClick={() => setViewOffset(-1)}
+              className="text-xs text-zinc-500 hover:text-zinc-300 px-2 py-1 rounded transition-colors"
+            >
+              ← Prev
+            </button>
+          )}
+          {viewOffset < 0 && (
+            <button
+              onClick={() => setViewOffset(0)}
+              className="text-xs text-zinc-500 hover:text-zinc-300 px-2 py-1 rounded transition-colors"
+            >
+              Current →
+            </button>
+          )}
         </div>
 
         {canAdvance && !isSpectator && (
           <button
             onClick={() => onAction({ type: 'next', playerId })}
-            className="ml-4 shrink-0 flex items-center gap-1.5 px-5 py-2.5 min-h-11 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-zinc-200 rounded-full border border-zinc-700 text-sm font-medium transition-colors"
+            disabled={viewOffset < 0}
+            className={clsx(
+              'ml-4 shrink-0 flex items-center gap-1.5 px-5 py-2.5 min-h-11 rounded-full border text-sm font-medium transition-colors',
+              viewOffset < 0
+                ? 'bg-zinc-800/50 text-zinc-600 border-zinc-800 cursor-not-allowed'
+                : 'bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-zinc-200 border-zinc-700'
+            )}
           >
             <span>Next</span>
-            <span className="text-zinc-400">→</span>
+            <span className={clsx(viewOffset < 0 ? 'text-zinc-700' : 'text-zinc-400')}>→</span>
           </button>
         )}
 
