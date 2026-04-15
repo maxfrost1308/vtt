@@ -13,6 +13,7 @@ interface CardRendererProps {
 interface CardBackProps {
   forgeProject: ForgeProject;
   cardTypeId: string;
+  row?: ForgeRow;
 }
 
 export function CardRenderer({ project, cardTypeId, row }: CardRendererProps) {
@@ -34,10 +35,10 @@ export function CardRenderer({ project, cardTypeId, row }: CardRendererProps) {
   );
 }
 
-export function CardBack({ forgeProject, cardTypeId }: CardBackProps) {
+export function CardBack({ forgeProject, cardTypeId, row }: CardBackProps) {
   const rendered = useMemo(
-    () => renderFullCard(forgeProject, cardTypeId, {} as ForgeRow, { side: 'back' }),
-    [forgeProject, cardTypeId]
+    () => renderFullCard(forgeProject, cardTypeId, row ?? ({} as ForgeRow), { side: 'back' }),
+    [forgeProject, cardTypeId, row]
   );
 
   if (!rendered) {
