@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, type ReactNode } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, type ReactNode } from 'react';
 import clsx from 'clsx';
 import type { BoardProps, PlayerInfo, GameAction } from '@/lib/frameworks/types';
 import type { DftQState } from './index';
@@ -106,7 +106,7 @@ export function DftQBoard({
     return () => clearTimeout(timer);
   }, [showXOverlay, onAction, playerId]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!pendingNextRef.current) {
       setAnimPhase('idle');
       return;
