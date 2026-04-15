@@ -356,6 +356,7 @@ export function DftQBoard({
                   <CardBack
                     forgeProject={forgeProject}
                     cardTypeId={deckCardType.id}
+                    row={displayRow ?? undefined}
                   />
                 </div>
               </ScaledCard>
