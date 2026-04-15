@@ -89,6 +89,9 @@ declare module 'forge' {
   ): RenderFullCardResult | null;
   export function scopeCss(css: string, scope: string): string;
   export function preprocessCssAssets(css: string, getAsset?: (name: string) => ForgeAsset | null | undefined): string;
+  export function buildFontFaceCss(fonts: Record<string, ForgeAsset>): string;
+  export function detectFontFormat(filename: string): string;
+  export function escapeCssFontName(name: string): string;
   export function parseCsv(csvText: string): Promise<{ data: ForgeRow[]; errors: unknown[] }>;
   export function generateCsv(fields: ForgeField[], rows: ForgeRow[]): string;
   export function hashTagColor(value: string): string;
@@ -98,4 +101,15 @@ declare module 'forge' {
   export function generateQrSvg(text: string, options?: unknown): string;
   export function sanitizeTemplate(html: string): string;
   export const CURRENT_FORMAT_VERSION: number;
+
+  export function getCardTypes(project: ForgeProject): ForgeCardType[];
+  export function getCardsByType(project: ForgeProject, cardTypeId: string): ForgeRow[];
+  export function getCard(project: ForgeProject, cardTypeId: string, index: number): ForgeRow | null;
+  export function sortCards(rows: ForgeRow[], field: string, direction?: 'asc' | 'desc'): ForgeRow[];
+  export function getProjectSummary(project: ForgeProject): {
+    name: string;
+    cardTypeCount: number;
+    totalCards: number;
+    cardTypes: Array<{ id: string; name: string; count: number }>;
+  };
 }
